@@ -43,6 +43,7 @@ export function CharacterMarker({
           src={character.image}
           alt={character.name}
           className="w-full h-full object-cover"
+          style={{ objectPosition: character.imagePosition ?? "center" }}
           loading="lazy"
           draggable={false}
         />

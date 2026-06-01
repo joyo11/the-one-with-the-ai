@@ -14,6 +14,7 @@ export interface Character {
   tag: string; // role tagline
   welcome: string; // welcome message in their voice
   image: string; // public-path portrait, e.g. "/characters/joey.png"
+  imagePosition?: string; // CSS object-position; bias the crop toward the face for full-body shots (default: center)
 }
 
 export const CHARACTERS: Character[] = [
@@ -25,6 +26,7 @@ export const CHARACTERS: Character[] = [
     tag: "competitive & clean",
     welcome: "Hi! Come in, come in. Don't touch anything. What do you need?",
     image: "/characters/mon.png",
+    imagePosition: "center 18%",
   },
   {
     name: "Joey",
@@ -34,6 +36,7 @@ export const CHARACTERS: Character[] = [
     tag: "how you doin'?",
     welcome: "How you doin'? What's on your mind?",
     image: "/characters/joey.png",
+    imagePosition: "center 8%",
   },
   {
     name: "Ross",
@@ -43,6 +46,7 @@ export const CHARACTERS: Character[] = [
     tag: "we were on a break",
     welcome: "Oh, hi! Did you know dinosaurs are technically still around? Anyway — what's up?",
     image: "/characters/ross.png",
+    imagePosition: "center 15%",
   },
   {
     name: "Chandler",
@@ -53,6 +57,7 @@ export const CHARACTERS: Character[] = [
     welcome:
       "Oh good, a guest. Could I BE any more excited? What do you want to talk about?",
     image: "/characters/chandler.png",
+    imagePosition: "center 12%",
   },
   {
     name: "Rachel",
@@ -62,6 +67,7 @@ export const CHARACTERS: Character[] = [
     tag: "it's a metaphor",
     welcome: "Oh my god, hi! Come in, sit. Tell me everything.",
     image: "/characters/rachel.png",
+    imagePosition: "center 25%",
   },
   {
     name: "Phoebe",
@@ -72,6 +78,7 @@ export const CHARACTERS: Character[] = [
     welcome:
       "Oh hi! Good energy or chaotic energy? Either's great. What's going on?",
     image: "/characters/pheebs.png",
+    imagePosition: "center 20%",
   },
 ];
 

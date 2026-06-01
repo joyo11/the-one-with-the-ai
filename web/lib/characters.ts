@@ -9,10 +9,11 @@ export type CharacterName =
 export interface Character {
   name: CharacterName;
   initial: string;
-  tint: string; // pastel background of the avatar circle
+  tint: string; // pastel background of the avatar circle (shown behind image if it loads, also acts as the fallback when image is missing)
   stroke: string; // strong accent color for marker stroke + border
   tag: string; // role tagline
   welcome: string; // welcome message in their voice
+  image: string; // public-path portrait, e.g. "/characters/joey.png"
 }
 
 export const CHARACTERS: Character[] = [
@@ -23,6 +24,7 @@ export const CHARACTERS: Character[] = [
     stroke: "#F43F5E",
     tag: "competitive & clean",
     welcome: "Hi! Come in, come in. Don't touch anything. What do you need?",
+    image: "/characters/mon.png",
   },
   {
     name: "Joey",
@@ -31,6 +33,7 @@ export const CHARACTERS: Character[] = [
     stroke: "#F59E0B",
     tag: "how you doin'?",
     welcome: "How you doin'? What's on your mind?",
+    image: "/characters/joey.png",
   },
   {
     name: "Ross",
@@ -39,6 +42,7 @@ export const CHARACTERS: Character[] = [
     stroke: "#059669",
     tag: "we were on a break",
     welcome: "Oh, hi! Did you know dinosaurs are technically still around? Anyway — what's up?",
+    image: "/characters/ross.png",
   },
   {
     name: "Chandler",
@@ -48,6 +52,7 @@ export const CHARACTERS: Character[] = [
     tag: "could I BE more…",
     welcome:
       "Oh good, a guest. Could I BE any more excited? What do you want to talk about?",
+    image: "/characters/chandler.png",
   },
   {
     name: "Rachel",
@@ -56,6 +61,7 @@ export const CHARACTERS: Character[] = [
     stroke: "#EC4899",
     tag: "it's a metaphor",
     welcome: "Oh my god, hi! Come in, sit. Tell me everything.",
+    image: "/characters/rachel.png",
   },
   {
     name: "Phoebe",
@@ -65,6 +71,7 @@ export const CHARACTERS: Character[] = [
     tag: "smelly cat fan",
     welcome:
       "Oh hi! Good energy or chaotic energy? Either's great. What's going on?",
+    image: "/characters/pheebs.png",
   },
 ];
 

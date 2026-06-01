@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CHARACTERS, BY_SLUG, type Character } from "@/lib/characters";
+import { CHARACTERS, type Character } from "@/lib/characters";
 import {
   streamChat,
   fetchWatch,
@@ -16,10 +16,15 @@ interface Props {
   character: Character;
 }
 
-function CharacterRail({ current }: { current: Character }) {
+interface RailProps {
+  current: Character;
+  onPick?: () => void;
+}
+
+function CharacterRail({ current, onPick }: RailProps) {
   return (
     <aside
-      className="w-[280px] shrink-0 h-full bg-surface flex flex-col"
+      className="w-[260px] sm:w-[280px] shrink-0 h-full bg-surface flex flex-col"
       style={{ borderRight: "1px solid var(--border)" }}
     >
       <div
@@ -46,6 +51,7 @@ function CharacterRail({ current }: { current: Character }) {
             <Link
               key={c.name}
               href={`/chat/${c.name.toLowerCase()}`}
+              onClick={onPick}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
                 on ? "bg-bg" : "hover:bg-black/5"
               }`}
@@ -84,7 +90,6 @@ function WhereToWatch({ character }: { character: Character }) {
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const onClick = (e: MouseEvent) => {
@@ -94,7 +99,6 @@ function WhereToWatch({ character }: { character: Character }) {
     return () => window.removeEventListener("mousedown", onClick);
   }, [open]);
 
-  // Lazy-load options the first time the dropdown opens
   useEffect(() => {
     if (!open || options || loading) return;
     setLoading(true);
@@ -109,13 +113,14 @@ function WhereToWatch({ character }: { character: Character }) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`font-sans font-semibold text-[13px] rounded-full px-4 py-2 transition-colors ${
+        className={`font-sans font-semibold text-[12px] sm:text-[13px] rounded-full px-3 sm:px-4 py-1.5 sm:py-2 transition-colors ${
           open
             ? "text-white bg-accent border border-accent"
             : "text-fg border border-border hover:bg-accent hover:text-white hover:border-accent"
         }`}
       >
-        Where to watch ▾
+        <span className="hidden sm:inline">Where to watch ▾</span>
+        <span className="sm:hidden">Watch ▾</span>
       </button>
       {open && (
         <div
@@ -179,11 +184,11 @@ function Bubble({
   if (m.role === "assistant") {
     return (
       <div
-        className="flex gap-3 items-end animate-msg-in"
+        className="flex gap-2 sm:gap-3 items-end animate-msg-in"
         style={{ animationDelay: delay }}
       >
-        <CharacterMarker character={character} size={40} />
-        <div className="max-w-[460px]">
+        <CharacterMarker character={character} size={36} className="sm:!w-10 sm:!h-10" />
+        <div className="max-w-[78%] sm:max-w-[460px]">
           <div
             className="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6]"
             style={{
@@ -204,7 +209,7 @@ function Bubble({
       className="flex gap-3 items-end justify-end animate-msg-in"
       style={{ animationDelay: delay }}
     >
-      <div className="max-w-[460px]">
+      <div className="max-w-[78%] sm:max-w-[460px]">
         <div
           className="rounded-2xl rounded-br-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6]"
           style={{
@@ -227,24 +232,15 @@ function Bubble({
 
 function TypingBubble({ character }: { character: Character }) {
   return (
-    <div className="flex gap-3 items-end">
-      <CharacterMarker character={character} size={40} />
+    <div className="flex gap-2 sm:gap-3 items-end">
+      <CharacterMarker character={character} size={36} className="sm:!w-10 sm:!h-10" />
       <div
         className="rounded-2xl rounded-bl-md px-5 py-4 bg-surface inline-flex items-center gap-1.5"
         style={{ border: "1px solid var(--border)" }}
       >
-        <span
-          className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent"
-          style={{ animationDelay: "0s" }}
-        />
-        <span
-          className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent"
-          style={{ animationDelay: "0.2s" }}
-        />
-        <span
-          className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent"
-          style={{ animationDelay: "0.4s" }}
-        />
+        <span className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent" style={{ animationDelay: "0s" }} />
+        <span className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent" style={{ animationDelay: "0.2s" }} />
+        <span className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent" style={{ animationDelay: "0.4s" }} />
       </div>
     </div>
   );
@@ -252,16 +248,16 @@ function TypingBubble({ character }: { character: Character }) {
 
 function EmptyState({ character }: { character: Character }) {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-center">
+    <div className="h-full flex flex-col items-center justify-center text-center px-4">
       <CouchIcon style={{ width: 54, color: "var(--accent)" }} />
-      <p className="font-marker text-fg text-[30px] mt-5 leading-tight">
+      <p className="font-marker text-fg text-[24px] sm:text-[30px] mt-5 leading-tight">
         the couch is empty —<br />
         sit down.
       </p>
-      <div className="mt-8 flex gap-3 items-end max-w-[480px]">
+      <div className="mt-6 sm:mt-8 flex gap-3 items-end max-w-[480px]">
         <CharacterMarker character={character} size={40} />
         <div
-          className="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6] text-left"
+          className="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[14px] sm:text-[15px] leading-[1.6] text-left"
           style={{
             borderLeft: `3px solid ${character.stroke}`,
             borderTop: "1px solid var(--border)",
@@ -283,14 +279,24 @@ export function ChatShell({ character }: Props) {
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll on new messages
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [history, streaming]);
+
+  // Lock body scroll when drawer is open on mobile
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = "";
+      };
+    }
+  }, [drawerOpen]);
 
   const send = useCallback(async () => {
     const text = input.trim();
@@ -300,26 +306,17 @@ export function ChatShell({ character }: Props) {
     const next = [...history, newUser];
     setHistory(next);
     setStreaming(true);
-
-    // Add a placeholder assistant message we mutate as deltas arrive
     setHistory((h) => [...h, { role: "assistant", content: "" }]);
     let buf = "";
     try {
       for await (const chunk of streamChat(character.name, next)) {
         if (chunk.error) {
           setToast(chunk.error);
-          // Mark the last user message as failed
           setHistory((h) => {
             const copy = h.slice();
-            // remove the empty assistant placeholder
-            if (
-              copy.length &&
-              copy[copy.length - 1].role === "assistant" &&
-              !copy[copy.length - 1].content
-            ) {
+            if (copy.length && copy[copy.length - 1].role === "assistant" && !copy[copy.length - 1].content) {
               copy.pop();
             }
-            // mark the prior user message as failed
             for (let i = copy.length - 1; i >= 0; i--) {
               if (copy[i].role === "user") {
                 copy[i] = { ...copy[i], failed: true };
@@ -354,40 +351,62 @@ export function ChatShell({ character }: Props) {
   }, [input, history, streaming, character.name]);
 
   return (
-    <div className="h-screen flex bg-bg" style={{ overflow: "hidden" }}>
-      <CharacterRail current={character} />
+    <div className="h-[100dvh] flex bg-bg" style={{ overflow: "hidden" }}>
+      {/* Desktop rail */}
+      <div className="hidden md:flex h-full">
+        <CharacterRail current={character} />
+      </div>
+
+      {/* Mobile drawer */}
+      {drawerOpen && (
+        <>
+          <button
+            className="md:hidden fixed inset-0 z-30 bg-black/50"
+            aria-label="Close menu"
+            onClick={() => setDrawerOpen(false)}
+          />
+          <div className="md:hidden fixed left-0 top-0 bottom-0 z-40 animate-msg-in">
+            <CharacterRail current={character} onPick={() => setDrawerOpen(false)} />
+          </div>
+        </>
+      )}
+
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header
-          className="shrink-0 flex items-center gap-3 px-7 py-4 bg-surface relative"
+          className="shrink-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-4 bg-surface relative"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
+          <button
+            className="md:hidden text-fg text-[22px] leading-none w-9 h-9 flex items-center justify-center rounded-md hover:bg-black/5"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
           <Link
             href="/"
-            className="text-muted text-[20px] leading-none px-1"
+            className="hidden md:flex text-muted text-[20px] leading-none px-1"
             aria-label="Back"
           >
             ‹
           </Link>
-          <CharacterMarker character={character} size={44} />
-          <div className="flex-1">
-            <p className="font-sans font-bold text-[16px] text-fg leading-tight">
+          <CharacterMarker character={character} size={40} className="sm:!w-11 sm:!h-11" />
+          <div className="flex-1 min-w-0">
+            <p className="font-sans font-bold text-[15px] sm:text-[16px] text-fg leading-tight">
               {character.name}
             </p>
-            <p className="font-sans text-[12px] text-muted flex items-center gap-1.5">
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full"
-                style={{ background: "var(--success)" }}
-              />
-              grounded · in character
+            <p className="font-sans text-[11px] sm:text-[12px] text-muted flex items-center gap-1.5">
+              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: "var(--success)" }} />
+              <span className="hidden sm:inline">grounded · in character</span>
+              <span className="sm:hidden">in character</span>
             </p>
           </div>
           <WhereToWatch character={character} />
         </header>
 
-        {/* Toast */}
         {toast && (
-          <div className="px-7 pt-3">
+          <div className="px-4 sm:px-7 pt-3">
             <div
               className="animate-toast-in flex items-start gap-3 rounded-xl bg-surface px-4 py-3"
               style={{
@@ -415,12 +434,8 @@ export function ChatShell({ character }: Props) {
           </div>
         )}
 
-        {/* Thread */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-y-auto grain relative bg-bg"
-        >
-          <div className="h-full px-8 py-7 space-y-5">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto grain relative bg-bg">
+          <div className="h-full px-4 sm:px-8 py-5 sm:py-7 space-y-4 sm:space-y-5">
             {history.length === 0 ? (
               <EmptyState character={character} />
             ) : (
@@ -436,10 +451,13 @@ export function ChatShell({ character }: Props) {
           </div>
         </div>
 
-        {/* Composer */}
+        {/* Composer with iOS safe-area padding */}
         <div
-          className="shrink-0 p-4 bg-surface"
-          style={{ borderTop: "1px solid var(--border)" }}
+          className="shrink-0 p-3 sm:p-4 bg-surface"
+          style={{
+            borderTop: "1px solid var(--border)",
+            paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          }}
         >
           <form
             onSubmit={(e) => {

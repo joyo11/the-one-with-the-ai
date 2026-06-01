@@ -1,0 +1,7 @@
+character,n,classifier_match_rate,judge_avg,judge_stdev,judge_min
+Monica,5,0.8,8.4,0.55,8
+Joey,5,1.0,7.8,0.84,7
+Ross,5,1.0,8,1.0,7
+Chandler,5,0.4,9,0.0,9
+Rachel,5,0.8,8.4,0.89,7
+Phoebe,5,0.8,8.8,0.45,8

@@ -1,0 +1,56 @@
+# macOS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Env files (secrets — never push)
+.env
+.env.local
+.env.*.local
+
+# Runtime logs
+*.log
+bot.log
+api.log
+dev.log
+
+# Large generated artifacts — regenerate locally by running the scripts:
+#   classifier/prepare_data.py — re-downloads emorynlp dataset
+#   classifier/train.py        — re-trains DistilBERT
+#   chatbots/build_index.py    — re-embeds character lines
+#   server/precompute_game_lines.py — re-scores game lines
+# Per the brief's IP guardrail we also do NOT ship the cleaned transcript CSV.
+classifier/data/
+classifier/models/
+chatbots/index/
+server/game_lines.jsonl
+
+# Eval intermediates (keep scorecard.csv as the published result)
+evals/data/
+
+# Vercel
+.vercel/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*~
+
+# Misc
+.cache/

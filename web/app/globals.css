@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f5efe3;
+  --surface: #fffbf5;
+  --border: #e5dcc7;
+  --fg: #2c1f14;
+  --muted: #8b7355;
+  --accent: #ea580c;
+  --accent2: #166534;
+  --error: #dc2626;
+  --success: #16a34a;
+}
+
+.dark {
+  --bg: #1a1410;
+  --surface: #2a201a;
+  --border: #3d2f26;
+  --fg: #f5efe3;
+  --muted: #b5a285;
+  --accent: #fb923c;
+  --accent2: #4ade80;
+  --error: #f87171;
+  --success: #4ade80;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* paper grain — sits over cream surfaces */
+.grain {
+  position: relative;
+}
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  border-radius: inherit;
+}
+.dark .grain::before {
+  mix-blend-mode: screen;
+  opacity: 0.035;
+}
+
+/* Central Perk hero — cinematic */
+.hero-cp {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(125% 95% at 50% -10%, #6b3415 0%, #3a1d0c 44%, #190d05 100%);
+  color: #fff;
+}
+.hero-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(46% 42% at 32% 38%, rgba(251, 146, 60, 0.42), transparent 72%);
+  pointer-events: none;
+}
+.hero-vig {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 -130px 170px -40px rgba(0, 0, 0, 0.78),
+    inset 0 70px 130px -50px rgba(0, 0, 0, 0.55);
+}
+.bokeh {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(16px);
+  pointer-events: none;
+}
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* hand-drawn sketch frame around picker cards */
+.sketch-frame {
+  position: relative;
+}
+.sketch-frame .sketch {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  pointer-events: none;
+  overflow: visible;
+}
+.sketch-frame .sketch rect {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  filter: url(#rough);
+  transition: stroke 0.18s ease;
+}
+.sketch-frame:hover .sketch rect {
+  stroke: var(--accent);
+}
+
+/* warm picker card */
+.ccard {
+  background: var(--surface);
+  border-radius: 4px;
+  padding: 22px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+  color: var(--fg);
+}
+.ccard:hover {
+  transform: translateY(-4px) rotate(-0.5deg);
+}
+
+/* eyebrow F·R·I·E·N·D·S */
+.friends-line {
+  font-family: var(--font-marker), cursive;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+}
+.friends-line .d {
+  margin: 0 3px;
+}
+
+/* steam over the couch */
+.steam path {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
+  opacity: 0.16;
+}
+.doodle {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+/* skeleton shimmer */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--border) 60%, transparent) 25%,
+    color-mix(in srgb, var(--surface) 90%, var(--border)) 37%,
+    color-mix(in srgb, var(--border) 60%, transparent) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+  border-radius: 7px;
+}
+
+/* respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* scrollbar polish on cream */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 80%, var(--muted));
+  border-radius: 8px;
+  border: 3px solid var(--bg);
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}

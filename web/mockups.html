@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The One With the AI — Design Canvas</title>
+<!--
+  ============================================================
+  THE ONE WITH THE AI — single-file design canvas
+  Sections 00–04 stacked vertically. Each section: a large
+  Permanent Marker header + a row/grid of "Figma frames" at the
+  1440 desktop and 390 mobile breakpoints. Each frame: 1px border,
+  soft shadow, mono label above (section.frame — name • bp • dims).
+  Tailwind via Play CDN. Google Fonts (Permanent Marker, DM Sans).
+  Animations: vanilla CSS/JS, actually running. Annotated with
+  Framer-Motion-named timing values in mono captions.
+  ============================================================
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Permanent+Marker&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          bg:      'var(--bg)',
+          surface: 'var(--surface)',
+          border:  'var(--border)',
+          fg:      'var(--fg)',
+          muted:   'var(--muted)',
+          accent:  'var(--accent)',
+          accent2: 'var(--accent2)',
+          error:   'var(--error)',
+          success: 'var(--success)',
+        },
+        fontFamily: {
+          marker: ["Permanent Marker", 'cursive'],
+          sans:   ["DM Sans", 'system-ui', 'sans-serif'],
+          mono:   ["DM Mono", 'ui-monospace', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  /* ---------- design tokens ---------- */
+  :root {
+    --bg:      #F5EFE3;
+    --surface: #FFFBF5;
+    --border:  #E5DCC7;
+    --fg:      #2C1F14;
+    --muted:   #8B7355;
+    --accent:  #EA580C;
+    --accent2: #166534;
+    --error:   #DC2626;
+    --success: #16A34A;
+  }
+  .dark {
+    --bg:      #1A1410;
+    --surface: #2A201A;
+    --border:  #3D2F26;
+    --fg:      #F5EFE3;
+    --muted:   #B5A285;
+    --accent:  #FB923C;
+    --accent2: #4ADE80;
+    --error:   #F87171;
+    --success: #4ADE80;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "DM Sans", 'DM Sans', system-ui, sans-serif;
+    background: #d9d5cc; /* neutral "figma" backdrop */
+    color: #2C1F14;
+  }
+
+  /* ---------- paper grain ---------- */
+  /* faint canvas noise warming cream toward beige; sits over surfaces */
+  .grain { position: relative; }
+  .grain::before {
+    content: "";
+    position: absolute; inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    border-radius: inherit;
+  }
+  .dark .grain::before { mix-blend-mode: screen; opacity: 0.035; }
+
+  /* ---------- figma frame chrome ---------- */
+  .frame-wrap { display: inline-flex; flex-direction: column; gap: 10px; }
+  .frame-label {
+    font-family: "DM Mono", 'DM Mono', monospace;
+    font-size: 12px; letter-spacing: 0.02em;
+    color: #6b6257; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap;
+  }
+  .frame-label b { color: #2C1F14; font-weight: 500; }
+  .frame-label .dim { color: #9a9183; }
+  .frame {
+    border: 1px solid #c8c2b6;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px -28px rgba(40,30,18,0.45), 0 2px 8px -2px rgba(40,30,18,0.18);
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* ---------- mono caption pills ---------- */
+  .cap {
+    font-family: "DM Mono", 'DM Mono', monospace;
+    font-size: 11px; line-height: 1.4;
+    color: #6b6257;
+    background: #f3f1ec;
+    border: 1px solid #d8d3c8;
+    border-radius: 6px;
+    padding: 3px 7px;
+    display: inline-block;
+  }
+  .cap-accent { color: var(--accent); border-color: #f0cdb5; background: #fdf2ea; }
+
+  /* ---------- couch watermark ---------- */
+  .couch-wm {
+    position: absolute; pointer-events: none;
+    color: var(--accent); opacity: 0.05;
+  }
+
+  /* ============================================================
+     ANIMATIONS — annotated with Framer Motion equivalents
+     ============================================================ */
+
+  /* message appear: initial{opacity:0,y:4} animate{opacity:1,y:0} dur .2 easeOut */
+  @keyframes msgIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-msg { animation: msgIn .2s ease-out both; }
+
+  /* typing indicator: 3 dots sequential opacity .3->1->.3 over 1.4s loop */
+  @keyframes typedot { 0%,60%,100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
+  .typing-dot { animation: typedot 1.4s infinite ease-in-out; }
+
+  /* loading skeleton shimmer */
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  .skeleton {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--border) 60%, transparent) 25%, color-mix(in srgb, var(--surface) 90%, var(--border)) 37%, color-mix(in srgb, var(--border) 60%, transparent) 63%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite linear;
+    border-radius: 7px;
+  }
+
+  /* brand-mark letters arrive: opacity 0->1, dur .08, delay i*.06, easeOut */
+  .bm-letter { opacity: 0; animation: bmIn .08s ease-out forwards; }
+  @keyframes bmIn { to { opacity: 1; } }
+  /* dots start orange, crossfade to final hue over .4s */
+  .bm-dot { transition: color .4s ease; }
+
+  /* toast slide-in */
+  @keyframes toastIn { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .anim-toast { animation: toastIn .22s cubic-bezier(.2,.7,.3,1) both; }
+
+  /* card hover ring handled with utilities; reveal badge pop */
+  @keyframes pop { 0% { transform: scale(.8); opacity: 0; } 60% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+  .anim-pop { animation: pop .32s cubic-bezier(.2,.7,.3,1) both; }
+
+  /* confidence bar fill */
+  @keyframes barfill { from { width: 0; } }
+  .bar-fill { animation: barfill .7s cubic-bezier(.2,.7,.3,1) both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .001ms !important; animation-delay: 0ms !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+    .bm-letter { opacity: 1 !important; }
+    /* couch watermark still appears (it's static) */
+  }
+
+  /* scrollbar polish */
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-thumb { background: #b9b2a4; border-radius: 8px; border: 3px solid #d9d5cc; }
+  ::-webkit-scrollbar-track { background: #d9d5cc; }
+
+  /* section divider */
+  .section { padding: 64px 56px 88px; }
+  .sec-head { font-family: "Permanent Marker", cursive; color: var(--accent); }
+
+  /* ---------- reusable product components ---------- */
+  .marker {
+    border-radius: 9999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: "Permanent Marker", cursive;
+    font-size: 38px; line-height: 1;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+  }
+  .chip {
+    font-family: "DM Sans", sans-serif; font-weight: 600; font-size: 14px;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 9999px;
+    padding: 9px 18px;
+    transition: transform .15s ease, background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .chip:hover { transform: translateY(-1px); border-color: var(--accent); }
+  .chip-sel {
+    background: var(--accent); color: #fff; border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+
+  /* picker card */
+  .pcard {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px 16px;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    transition: transform .15s ease, box-shadow .15s ease, outline-color .15s ease;
+    cursor: pointer;
+  }
+  .pcard:hover { transform: scale(1.03); box-shadow: 0 18px 40px -18px rgba(234,88,12,0.5); }
+  .pname { font-family: "DM Sans", sans-serif; font-weight: 700; color: var(--fg); margin-top: 10px; font-size: 15px; }
+  .ptag  { font-family: "DM Sans", sans-serif; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+  /* ---------- Central Perk cinematic landing ---------- */
+  .hero-cp { position: relative; overflow: hidden; background: radial-gradient(125% 95% at 50% -10%, #6b3415 0%, #3a1d0c 44%, #190d05 100%); color: #fff; }
+  .hero-glow { position: absolute; inset: 0; background: radial-gradient(46% 42% at 32% 38%, rgba(251,146,60,.42), transparent 72%); }
+  .hero-vig  { position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 -130px 170px -40px rgba(0,0,0,.78), inset 0 70px 130px -50px rgba(0,0,0,.55); }
+  .bokeh { position: absolute; border-radius: 50%; filter: blur(16px); }
+  .hero-grain { position: absolute; inset: 0; pointer-events: none; opacity: .07; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .steam path { fill: none; stroke: #fff; stroke-linecap: round; opacity: .16; }
+  .doodle { color: var(--muted); opacity: .5; }
+
+  /* eyebrow F•R•I•E•N•D•S dotted line */
+  .friends-line { font-family: "Permanent Marker", cursive; letter-spacing: .04em; display: inline-flex; align-items: center; }
+  .friends-line .d { margin: 0 3px; }
+
+  /* hand-drawn sketch frame around a card */
+  .sketch-frame { position: relative; }
+  .sketch { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); pointer-events: none; overflow: visible; }
+  .sketch rect { fill: none; stroke: currentColor; stroke-width: 2.4; filter: url(#rough); }
+
+  /* warm picker card (cafe) */
+  .ccard { background: var(--surface); border-radius: 4px; padding: 22px 18px 18px; display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer; transition: transform .15s ease; color: var(--fg); }
+  .ccard:hover { transform: translateY(-4px) rotate(-.5deg); }
+  .ccard:hover .sketch rect { stroke: var(--accent); }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- ============ COUCH SVG (defs) ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="couch" viewBox="0 0 128 72">
+    <!-- curved high back + body silhouette -->
+    <path d="M14 40
+             C14 21 22 16 34 16
+             L94 16
+             C106 16 114 21 114 40
+             L114 44
+             C107 44 102 49 102 56
+             L26 56
+             C26 49 21 44 14 44 Z" fill="currentColor"/>
+    <!-- left arm -->
+    <rect x="8" y="40" width="18" height="24" rx="8" fill="currentColor"/>
+    <!-- right arm -->
+    <rect x="102" y="40" width="18" height="24" rx="8" fill="currentColor"/>
+    <!-- seat cushion line -->
+    <rect x="26" y="46" width="76" height="14" rx="6" fill="currentColor"/>
+    <!-- legs -->
+    <rect x="20" y="62" width="7" height="8" rx="2" fill="currentColor"/>
+    <rect x="101" y="62" width="7" height="8" rx="2" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<!-- ============ CENTRAL PERK HERO ASSETS (defs) ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="cpCushG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fb923c"/>
+      <stop offset="0.5" stop-color="#ea580c"/>
+      <stop offset="1" stop-color="#c2410c"/>
+    </linearGradient>
+    <linearGradient id="cpSeatG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdba74"/>
+      <stop offset="1" stop-color="#ea580c"/>
+    </linearGradient>
+    <!-- hand-drawn wobble for sketch frames -->
+    <filter id="rough"><feTurbulence type="fractalNoise" baseFrequency="0.014" numOctaves="2" seed="6" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5"/></filter>
+  </defs>
+
+  <!-- the iconic Central Perk orange couch -->
+  <symbol id="couch-lux" viewBox="0 0 680 320">
+    <ellipse cx="340" cy="296" rx="296" ry="17" fill="#000" opacity="0.28"/>
+    <!-- backrest -->
+    <rect x="92" y="26" width="496" height="150" rx="48" fill="url(#cpCushG)"/>
+    <rect x="108" y="40" width="464" height="40" rx="20" fill="#fff" opacity="0.12"/>
+    <!-- tufting buttons + seams -->
+    <g stroke="#b1430b" stroke-width="3" opacity="0.85">
+      <line x1="168" y1="48" x2="168" y2="150"/><line x1="256" y1="48" x2="256" y2="150"/>
+      <line x1="344" y1="48" x2="344" y2="150"/><line x1="432" y1="48" x2="432" y2="150"/>
+      <line x1="512" y1="48" x2="512" y2="150"/>
+    </g>
+    <g fill="#9a3608">
+      <circle cx="168" cy="96" r="5"/><circle cx="256" cy="96" r="5"/><circle cx="344" cy="96" r="5"/><circle cx="432" cy="96" r="5"/><circle cx="512" cy="96" r="5"/>
+    </g>
+    <!-- arms -->
+    <rect x="50" y="92" width="78" height="168" rx="38" fill="url(#cpCushG)"/>
+    <rect x="64" y="104" width="50" height="46" rx="22" fill="#fff" opacity="0.14"/>
+    <rect x="552" y="92" width="78" height="168" rx="38" fill="url(#cpCushG)"/>
+    <rect x="566" y="104" width="50" height="46" rx="22" fill="#fff" opacity="0.14"/>
+    <!-- seat base apron -->
+    <rect x="112" y="158" width="456" height="104" rx="22" fill="#c2410c"/>
+    <!-- seat cushions -->
+    <rect x="120" y="150" width="150" height="60" rx="20" fill="url(#cpSeatG)"/>
+    <rect x="266" y="150" width="150" height="60" rx="20" fill="url(#cpSeatG)"/>
+    <rect x="412" y="150" width="150" height="60" rx="20" fill="url(#cpSeatG)"/>
+    <!-- wooden legs -->
+    <g fill="#3a2415">
+      <rect x="120" y="258" width="17" height="34" rx="5"/><rect x="250" y="258" width="17" height="34" rx="5"/>
+      <rect x="416" y="258" width="17" height="34" rx="5"/><rect x="546" y="258" width="17" height="34" rx="5"/>
+    </g>
+  </symbol>
+
+  <!-- coffee bean doodle -->
+  <symbol id="bean" viewBox="0 0 44 30">
+    <ellipse cx="22" cy="15" rx="18" ry="11.5" fill="none" stroke="currentColor" stroke-width="2"/>
+    <path d="M10 8 C17 13 27 17 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+</svg>
+
+<!-- ============ FIGMA CHROME STYLES ============ -->
+<style id="figma-chrome">
+  html, body { height: 100%; }
+  body { overflow: hidden; background: #1e1e1e; }
+
+  /* top toolbar */
+  #topbar { position: fixed; inset: 0 0 auto 0; height: 48px; background: #2c2c2c; border-bottom: 1px solid #181818; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; z-index: 60; color: #e6e6e6; font-family: "DM Sans", sans-serif; font-size: 13px; }
+  .tb-left, .tb-right { display: flex; align-items: center; gap: 6px; }
+  .tb-logo { width: 34px; height: 32px; border-radius: 6px; color: #cfcfcf; display: flex; align-items: center; justify-content: center; }
+  .tb-logo svg { width: 17px; height: 17px; }
+  .tb-logo:hover { background: #3a3a3a; }
+  .tb-div { width: 1px; height: 22px; background: #444; margin: 0 4px; }
+  .tb-tools { display: flex; align-items: center; gap: 2px; }
+  .tool { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #cfcfcf; }
+  .tool svg { width: 16px; height: 16px; }
+  .tool:hover { background: #3a3a3a; }
+  .tool.active { background: #0d99ff; color: #fff; }
+  .tb-center { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 7px; color: #9a9a9a; font-size: 12px; }
+  .tb-file { color: #fff; font-weight: 600; }
+  .tb-caret { color: #8a8a8a; font-size: 9px; }
+  .tb-avatars { display: flex; margin-right: 4px; }
+  .ava { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 700; border: 2px solid #2c2c2c; }
+  .tb-avatars .ava:not(:first-child) { margin-left: -7px; }
+  .tb-present { width: 32px; height: 32px; border-radius: 6px; color: #cfcfcf; display: flex; align-items: center; justify-content: center; }
+  .tb-present:hover { background: #3a3a3a; }
+  .tb-share { background: #0d99ff; color: #fff; border-radius: 6px; padding: 7px 14px; font-weight: 600; font-size: 13px; }
+  .tb-share:hover { filter: brightness(1.08); }
+
+  /* workspace + panels */
+  #workspace { position: fixed; top: 48px; left: 0; right: 0; bottom: 0; display: flex; }
+  #leftpanel { width: 248px; flex: none; background: #2c2c2c; border-right: 1px solid #181818; color: #cfcfcf; font-family: "DM Sans", sans-serif; overflow-y: auto; }
+  #rightpanel { width: 232px; flex: none; background: #2c2c2c; border-left: 1px solid #181818; color: #cfcfcf; font-family: "DM Sans", sans-serif; overflow-y: auto; padding-bottom: 30px; }
+  .lp-tabs { display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid #1f1f1f; position: sticky; top: 0; background: #2c2c2c; z-index: 2; }
+  .lp-tabs button { flex: 1; padding: 6px; font-size: 12px; color: #9a9a9a; border-radius: 6px; font-weight: 500; }
+  .lp-tabs button.active { color: #fff; background: #383838; }
+  .lp-sec-h { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; padding: 12px 12px 4px; }
+  .lp-page { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .lp-page.active { background: #383838; color: #fff; }
+  .lp-page .dot { width: 11px; height: 11px; border-radius: 3px; background: #EA580C; }
+  .lp-grp-h { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 12.5px; color: #e2e2e2; cursor: pointer; user-select: none; white-space: nowrap; overflow: hidden; }
+  .lp-grp-h > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+  .lp-grp-h:hover { background: #333; }
+  .lp-grp-h .chev { font-size: 9px; color: #888; width: 10px; text-align: center; flex: none; }
+  .lp-grp-h .hash { color: #7aa7ff; font-weight: 700; flex: none; }
+  .lp-layer { display: flex; align-items: center; gap: 7px; padding: 5px 10px 5px 30px; font-size: 12px; color: #b8b8b8; cursor: pointer; white-space: nowrap; overflow: hidden; }
+  .lp-layer > span:last-child { overflow: hidden; text-overflow: ellipsis; }
+  .lp-layer:hover { background: #333; color: #fff; }
+  .lp-layer .ic { color: #8a8a8a; font-size: 11px; width: 11px; flex: none; }
+
+  .rp-h { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #777; padding: 12px 12px 7px; border-bottom: 1px solid #1f1f1f; display: flex; align-items: center; justify-content: space-between; }
+  .rp-row { display: flex; align-items: center; gap: 8px; padding: 7px 12px; font-size: 12px; color: #cfcfcf; }
+  .rp-row .val { margin-left: auto; color: #9a9a9a; font-family: "DM Mono", monospace; font-size: 11px; }
+  .rp-sw { width: 16px; height: 16px; border-radius: 4px; border: 1px solid rgba(255,255,255,.15); flex: none; }
+
+  /* viewport + canvas */
+  #viewport { flex: 1; position: relative; overflow: hidden; background: #d4d0c8; }
+  #viewport.grab { cursor: grab; }
+  #viewport.grabbing { cursor: grabbing; }
+  #canvas { position: absolute; top: 0; left: 0; transform-origin: 0 0; width: 3200px; }
+  #canvas .section { padding: 64px 72px 110px; }
+  #canvas .frame-label { color: #5b5b5b; }
+  #canvas .frame-label b { color: #2d2d2d; }
+  #canvas .frame-label .dim { color: #8a8a8a; }
+  /* dotted spacing-grid feel on the canvas */
+  #viewport::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(0,0,0,0.06) 1px, transparent 1px); background-size: 28px 28px; z-index: 0; }
+
+  /* zoom bar + hint */
+  #zoombar { position: fixed; right: 244px; bottom: 18px; z-index: 60; display: flex; align-items: center; gap: 1px; background: #2c2c2c; border: 1px solid #181818; border-radius: 9px; padding: 4px; color: #e6e6e6; font-family: "DM Sans", sans-serif; font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+  #zoombar button { padding: 6px 10px; border-radius: 6px; line-height: 1; }
+  #zoombar button:hover { background: #3a3a3a; }
+  #zval { min-width: 48px; font-variant-numeric: tabular-nums; }
+  .zsep { width: 1px; height: 18px; background: #444; margin: 0 3px; }
+  #hudhint { position: fixed; left: 262px; bottom: 18px; z-index: 60; background: rgba(44,44,44,.94); color: #cfcfcf; font-family: "DM Sans", sans-serif; font-size: 11.5px; padding: 7px 13px; border-radius: 8px; border: 1px solid #181818; transition: opacity .5s ease; box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+  #hudhint b { color: #fff; font-weight: 600; }
+</style>
+
+<!-- ============ FIGMA CHROME — TOP TOOLBAR ============ -->
+<div id="topbar">
+  <div class="tb-left">
+    <button class="tb-logo" title="Main menu"><svg viewBox="0 0 38 57" fill="none"><path d="M19 28.5a9.5 9.5 0 119.5 9.5A9.5 9.5 0 0119 28.5z" fill="#1ABCFE"/><path d="M0 47.5A9.5 9.5 0 019.5 38H19v9.5a9.5 9.5 0 11-19 0z" fill="#0ACF83"/><path d="M19 0v19h9.5a9.5 9.5 0 100-19H19z" fill="#FF7262"/><path d="M0 9.5A9.5 9.5 0 009.5 19H19V0H9.5A9.5 9.5 0 000 9.5z" fill="#F24E1E"/><path d="M0 28.5A9.5 9.5 0 009.5 38H19V19H9.5A9.5 9.5 0 000 28.5z" fill="#A259FF"/></svg></button>
+    <span class="tb-div"></span>
+    <div class="tb-tools">
+      <button class="tool active" title="Move (V)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 1.2l10 5.6-4.2.9 2.4 4.6-1.8.95-2.4-4.6L3 12z"/></svg></button>
+      <button class="tool" title="Frame (F)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 1v14M11 1v14M1 5h14M1 11h14"/></svg></button>
+      <button class="tool" title="Rectangle (R)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="10" height="10" rx="1"/></svg></button>
+      <button class="tool" title="Pen (P)"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 14l1.4-4.2L9.8 3.4l2.8 2.8-6.4 6.4z"/></svg></button>
+      <button class="tool" title="Text (T)"><span style="font-weight:700;font-size:14px;line-height:1">T</span></button>
+      <button class="tool" title="Hand tool (H)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M5.2 7V4.4a1 1 0 012 0V7m0 0V3.6a1 1 0 012 0V7m0 0V4.6a1 1 0 012 0v3.7c0 3-1.7 5.2-4.2 5.2S5.4 11.5 5 10.5L3.9 8.6a1 1 0 011.6-1.1z"/></svg></button>
+      <button class="tool" title="Comment (C)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M2 4.2A2.2 2.2 0 014.2 2h7.6A2.2 2.2 0 0114 4.2V9a2.2 2.2 0 01-2.2 2.2H7l-3.2 2.8V11.2A2.2 2.2 0 012 9z"/></svg></button>
+    </div>
+  </div>
+  <div class="tb-center">
+    <span>Drafts</span><span class="tb-caret">/</span>
+    <span class="tb-file">The One With the AI — Mockups</span>
+    <span class="tb-caret">▾</span>
+  </div>
+  <div class="tb-right">
+    <div class="tb-avatars"><span class="ava" style="background:#EA580C">A</span><span class="ava" style="background:#0EA5E9">R</span><span class="ava" style="background:#8B5CF6">P</span></div>
+    <button class="tb-present" title="Present"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 3l9 5-9 5z"/></svg></button>
+    <button class="tb-share">Share</button>
+  </div>
+</div>
+
+<!-- ============ WORKSPACE ============ -->
+<div id="workspace">
+  <aside id="leftpanel">
+    <div class="lp-tabs"><button class="active">File</button><button>Assets</button></div>
+    <div class="lp-sec-h">Pages</div>
+    <div class="lp-page active"><span class="dot"></span>Mockups</div>
+    <div id="layers"></div>
+  </aside>
+
+  <div id="viewport">
+    <div id="canvas">
+
+<!-- ============ SECTION 00 ============ -->
+<section id="sec00" class="section">
+  <div class="flex items-end gap-4 mb-2">
+    <h2 class="sec-head text-[40px] leading-none">00 — Cover &amp; Design System</h2>
+  </div>
+  <p class="font-mono text-[13px] text-[#6b6257] mb-10 max-w-[640px]">Tokens, type, the six character markers, buttons, bubbles, chips, toasts, the couch motif and the brand mark — every atom the product is assembled from.</p>
+
+  <!-- ===== COVER FRAME ===== -->
+  <div class="frame-wrap mb-12">
+    <div class="frame-label"><b>00.0 — Cover</b><span class="dim">• desktop • 1440×560</span></div>
+    <div class="frame">
+      <div class="grain relative overflow-hidden bg-bg" style="width:1440px;height:560px">
+        <!-- couch watermark -->
+        <svg class="couch-wm" style="width:920px;left:50%;top:54%;transform:translate(-50%,-50%)" viewBox="0 0 128 72"><use href="#couch"/></svg>
+        <div class="relative h-full flex flex-col items-center justify-center text-center px-10">
+          <div class="font-marker text-accent leading-[0.95] text-[96px]" style="text-shadow:2px 3px 0 rgba(234,88,12,0.12)">The One<br/>With the AI</div>
+          <p class="mt-7 font-sans text-[20px] text-muted max-w-[620px] leading-relaxed">A Friends-themed AI you actually talk to. Chat in character, or play <span class="text-fg font-semibold">Guess Who Said It</span>. Pull up a chair at Central Perk.</p>
+          <div class="mt-8 flex items-center gap-3">
+            <button class="font-sans font-semibold text-white bg-accent rounded-full px-7 py-3 text-[16px] shadow-[0_8px_20px_-8px_rgba(234,88,12,0.7)] active:scale-[0.96] transition-transform">Pick a friend →</button>
+            <button class="font-sans font-semibold text-fg border border-border rounded-full px-7 py-3 text-[16px] hover:bg-accent hover:text-white hover:border-accent transition-colors">Play Guess Who</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COLOR TOKENS ===== -->
+  <h3 class="font-sans font-semibold text-[15px] text-[#2C1F14] mb-4 uppercase tracking-wide">Color tokens</h3>
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-4 max-w-[1200px]">
+    <!-- token swatch template repeated -->
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#F5EFE3"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">bg</b><br/><span class="text-[#8a8276]">L #F5EFE3</span><br/><span class="text-[#8a8276]">D #1A1410</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#FFFBF5"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">surface</b><br/><span class="text-[#8a8276]">L #FFFBF5</span><br/><span class="text-[#8a8276]">D #2A201A</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#E5DCC7"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">border</b><br/><span class="text-[#8a8276]">L #E5DCC7</span><br/><span class="text-[#8a8276]">D #3D2F26</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#2C1F14"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">fg</b><br/><span class="text-[#8a8276]">L #2C1F14</span><br/><span class="text-[#8a8276]">D #F5EFE3</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#8B7355"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">muted</b><br/><span class="text-[#8a8276]">L #8B7355</span><br/><span class="text-[#8a8276]">D #B5A285</span></div>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-12 max-w-[1200px]">
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white ring-2 ring-[#EA580C]">
+      <div class="h-20" style="background:#EA580C"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#EA580C]">accent ★</b><br/><span class="text-[#8a8276]">L #EA580C</span><br/><span class="text-[#8a8276]">D #FB923C</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#166534"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">accent-2</b><br/><span class="text-[#8a8276]">L #166534</span><br/><span class="text-[#8a8276]">D #4ADE80</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#DC2626"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">error</b><br/><span class="text-[#8a8276]">L #DC2626</span><br/><span class="text-[#8a8276]">D #F87171</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20" style="background:#16A34A"></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">success</b><br/><span class="text-[#8a8276]">L #16A34A</span><br/><span class="text-[#8a8276]">D #4ADE80</span></div>
+    </div>
+    <div class="rounded-xl overflow-hidden border border-[#cfc8ba] bg-white">
+      <div class="h-20 flex"><span class="flex-1" style="background:#F87171"></span><span class="flex-1" style="background:#60A5FA"></span><span class="flex-1" style="background:#FBBF24"></span></div>
+      <div class="p-3 font-mono text-[11px] leading-relaxed"><b class="text-[#2C1F14]">logo dots</b><br/><span class="text-[#8a8276]">red / blue / yellow</span><br/><span class="text-[#8a8276]">brand mark only</span></div>
+    </div>
+  </div>
+
+  <!-- ===== TYPOGRAPHY ===== -->
+  <h3 class="font-sans font-semibold text-[15px] text-[#2C1F14] mb-4 uppercase tracking-wide">Typography — two fonts only</h3>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 max-w-[1200px]">
+    <div class="frame grain relative bg-surface p-8">
+      <div class="flex items-center justify-between mb-5"><span class="cap">Permanent Marker</span><span class="cap">headings ≥24px · quotes · brand</span></div>
+      <div class="font-marker text-fg leading-none mb-4" style="font-size:64px">96 / Could it BE…</div>
+      <div class="font-marker text-fg leading-none mb-4" style="font-size:44px">64 / We were on a break!</div>
+      <div class="font-marker text-fg leading-none" style="font-size:28px">32 / How you doin'?</div>
+      <p class="mt-6 font-mono text-[11px] text-[#8a8276]">Never used for body copy.</p>
+    </div>
+    <div class="frame grain relative bg-surface p-8">
+      <div class="flex items-center justify-between mb-5"><span class="cap">DM Sans</span><span class="cap">everything else · line-height 1.6</span></div>
+      <p class="font-sans text-fg mb-3" style="font-size:18px;line-height:1.6">18 / Pull up a chair — the coffee's on.</p>
+      <p class="font-sans text-fg mb-3" style="font-size:16px;line-height:1.6">16 / The body size for chat bubbles and paragraphs.</p>
+      <p class="font-sans text-muted mb-3" style="font-size:14px;line-height:1.6">14 / Secondary text, captions, metadata.</p>
+      <p class="font-sans text-muted mb-5" style="font-size:12px;line-height:1.6">12 / Smallest — timestamps, footnotes.</p>
+      <div class="flex gap-6"><span class="font-sans font-normal text-fg text-[16px]">Regular 400</span><span class="font-sans font-semibold text-fg text-[16px]">Semibold 600</span><span class="font-sans font-bold text-fg text-[16px]">Bold 700</span></div>
+    </div>
+  </div>
+
+  <!-- ===== CHARACTER MARKERS ===== -->
+  <h3 class="font-sans font-semibold text-[15px] text-[#2C1F14] mb-1 uppercase tracking-wide">Character markers</h3>
+  <p class="font-mono text-[12px] text-[#6b6257] mb-4">80px round · initial in Permanent Marker, stroke in strong accent · pastel tint bg · <span class="cap">no emoji, no photos</span></p>
+  <div class="frame grain relative bg-surface p-8 mb-12 inline-block">
+    <div class="flex gap-7" id="marker-row">
+      <div class="text-center"><div class="marker mx-auto" style="width:80px;height:80px;background:#FFE4E6"><span style="color:#F43F5E">M</span></div><p class="mt-2 font-sans text-[13px] font-semibold text-fg">Monica</p><p class="font-mono text-[10px] text-muted">rose-500</p></div>
+      <div class="text-center"><div class="marker mx-auto" style="width:80px;height:80px;background:#FEF3C7"><span style="color:#F59E0B">J</span></div><p class="mt-2 font-sans text-[13px] font-semibold text-fg">Joey</p><p class="font-mono text-[10px] text-muted">amber-500</p></div>
+      <div class="text-center"><div class="marker mx-auto" style="width:80px;height:80px;background:#D1FAE5"><span style="color:#059669">R</span></div><p class="mt-2 font-sans text-[13px] font-semibold text-fg">Ross</p><p class="font-mono text-[10px] text-muted">emerald-600</p></div>
+      <div class="text-center"><div class="marker mx-auto" style="width:80px;height:80px;background:#E0F2FE"><span style="color:#0EA5E9">C</span></div><p class="mt-2 font-sans text-[13px] font-semibold text-fg">Chandler</p><p class="font-mono text-[10px] text-muted">sky-500</p></div>
+      <div class="text-center"><div class="marker mx-auto" style="width:80px;height:80px;background:#FCE7F3"><span style="color:#EC4899">R</span></div><p class="mt-2 font-sans text-[13px] font-semibold text-fg">Rachel</p><p class="font-mono text-[10px] text-muted">pink-500</p></div>
+      <div class="text-center"><div class="marker mx-auto" style="width:80px;height:80px;background:#EDE9FE"><span style="color:#8B5CF6">P</span></div><p class="mt-2 font-sans text-[13px] font-semibold text-fg">Phoebe</p><p class="font-mono text-[10px] text-muted">violet-500</p></div>
+    </div>
+  </div>
+
+  <!-- ===== BUTTONS + BUBBLES + CHIPS + TOASTS ===== -->
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-12 max-w-[1200px]">
+    <!-- buttons -->
+    <div class="frame grain relative bg-surface p-8">
+      <div class="flex items-center justify-between mb-6"><span class="cap">Buttons — rest / hover / pressed / disabled</span></div>
+      <div class="space-y-5">
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="font-mono text-[11px] text-muted w-[72px]">primary</span>
+          <button class="font-sans font-semibold text-white bg-accent rounded-full px-5 py-2.5 text-[14px] shadow-[0_8px_18px_-8px_rgba(234,88,12,0.7)]">Pick a friend</button>
+          <button class="font-sans font-semibold text-white rounded-full px-5 py-2.5 text-[14px]" style="background:#c2470a">hover</button>
+          <button class="font-sans font-semibold text-white bg-accent rounded-full px-5 py-2.5 text-[14px] scale-[0.96]">pressed</button>
+          <button class="font-sans font-semibold text-white bg-accent rounded-full px-5 py-2.5 text-[14px] opacity-40 cursor-not-allowed" disabled>disabled</button>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="font-mono text-[11px] text-muted w-[72px]">secondary</span>
+          <button class="font-sans font-semibold text-fg border border-border rounded-full px-5 py-2.5 text-[14px]">Where to watch</button>
+          <button class="font-sans font-semibold text-white bg-accent border border-accent rounded-full px-5 py-2.5 text-[14px]">hover→fill</button>
+          <button class="font-sans font-semibold text-fg border border-border rounded-full px-5 py-2.5 text-[14px] scale-[0.96]">pressed</button>
+          <button class="font-sans font-semibold text-fg border border-border rounded-full px-5 py-2.5 text-[14px] opacity-40 cursor-not-allowed" disabled>disabled</button>
+        </div>
+        <div class="flex items-center gap-3 flex-wrap">
+          <span class="font-mono text-[11px] text-muted w-[72px]">ghost</span>
+          <button class="font-sans font-semibold text-muted rounded-full px-5 py-2.5 text-[14px]">Back to friends</button>
+          <button class="font-sans font-semibold text-fg rounded-full px-5 py-2.5 text-[14px] bg-black/5">hover</button>
+          <button class="font-sans font-semibold text-fg rounded-full px-5 py-2.5 text-[14px] bg-black/10 scale-[0.96]">pressed</button>
+          <button class="font-sans font-semibold text-muted rounded-full px-5 py-2.5 text-[14px] opacity-40 cursor-not-allowed" disabled>disabled</button>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-2">
+        <span class="cap-accent">bg-accent · text-white · rounded-full</span>
+        <span class="cap">whileTap={{ scale: 0.96 }} · 0.1s</span>
+        <span class="cap">outlined → fills solid on hover</span>
+      </div>
+    </div>
+
+    <!-- chat bubbles -->
+    <div class="frame grain relative bg-surface p-8">
+      <div class="flex items-center justify-between mb-6"><span class="cap">Chat bubble — character-side &amp; user-side</span></div>
+      <div class="space-y-5">
+        <div class="flex gap-3 items-end">
+          <div class="marker shrink-0" style="width:44px;height:44px;background:#E0F2FE"><span style="color:#0EA5E9;font-size:22px">C</span></div>
+          <div class="max-w-[360px]">
+            <div class="rounded-2xl rounded-bl-md px-4 py-3 bg-bg border-l-[3px] text-fg font-sans text-[16px] leading-[1.6]" style="border-color:#0EA5E9;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">Could I <i>be</i> wearing any more layers? It's freezing in here.</div>
+            <span class="font-mono text-[10px] text-muted mt-1 inline-block">Chandler · just now</span>
+          </div>
+        </div>
+        <div class="flex gap-3 items-end justify-end">
+          <div class="max-w-[360px]">
+            <div class="rounded-2xl rounded-br-md px-4 py-3 bg-bg border border-border text-fg font-sans text-[16px] leading-[1.6]">Ha — fair. What's the deal with the leather jacket though?</div>
+            <span class="font-mono text-[10px] text-muted mt-1 block text-right">you · just now</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-2">
+        <span class="cap">character: border-l-[3px] accent</span>
+        <span class="cap">user: neutral cream · border-border</span>
+      </div>
+    </div>
+
+    <!-- chips -->
+    <div class="frame grain relative bg-surface p-8">
+      <div class="flex items-center justify-between mb-6"><span class="cap">Chip — Guess Who selector pill</span></div>
+      <div class="flex flex-wrap gap-3">
+        <button class="chip">Monica</button>
+        <button class="chip">Joey</button>
+        <button class="chip chip-sel">Ross</button>
+        <button class="chip">Chandler</button>
+        <button class="chip">Rachel</button>
+        <button class="chip">Phoebe</button>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-2"><span class="cap">default: border-border</span><span class="cap-accent">selected: bg-accent · ring</span></div>
+    </div>
+
+    <!-- toasts -->
+    <div class="frame grain relative bg-surface p-8">
+      <div class="flex items-center justify-between mb-6"><span class="cap">Toast — error / success / info</span></div>
+      <div class="space-y-3 max-w-[420px]">
+        <div class="anim-toast flex items-start gap-3 rounded-xl border-l-4 border border-border bg-bg px-4 py-3" style="border-left-color:#DC2626">
+          <span class="shrink-0 mt-0.5 text-[#DC2626]">✕</span>
+          <div><p class="font-sans font-semibold text-[14px] text-fg">Whoa, slow down</p><p class="font-sans text-[13px] text-muted leading-snug">Too many messages. Try again in 30s.</p></div>
+        </div>
+        <div class="anim-toast flex items-start gap-3 rounded-xl border-l-4 border border-border bg-bg px-4 py-3" style="border-left-color:#16A34A">
+          <span class="shrink-0 mt-0.5 text-[#16A34A]">✓</span>
+          <div><p class="font-sans font-semibold text-[14px] text-fg">You beat the AI!</p><p class="font-sans text-[13px] text-muted leading-snug">Correct — and the classifier was wrong.</p></div>
+        </div>
+        <div class="anim-toast flex items-start gap-3 rounded-xl border-l-4 border border-border bg-bg px-4 py-3" style="border-left-color:#EA580C">
+          <span class="shrink-0 mt-0.5 text-accent">☕</span>
+          <div><p class="font-sans font-semibold text-[14px] text-fg">New round ready</p><p class="font-sans text-[13px] text-muted leading-snug">Fresh line pulled from the script.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COUCH SVG + BRAND MARK ===== -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-[1200px]">
+    <div class="frame grain relative bg-surface p-8">
+      <div class="mb-6"><span class="cap">Central Perk couch — SVG in isolation</span></div>
+      <div class="flex items-center gap-10">
+        <svg style="width:160px;color:#EA580C" viewBox="0 0 128 72"><use href="#couch"/></svg>
+        <div class="space-y-3">
+          <div class="flex items-center gap-2"><svg style="width:24px;color:#EA580C" viewBox="0 0 128 72"><use href="#couch"/></svg><span class="font-mono text-[11px] text-muted">24px icon</span></div>
+          <div class="flex items-center gap-2"><svg style="width:40px;color:#EA580C;opacity:.05" viewBox="0 0 128 72"><use href="#couch"/></svg><span class="font-mono text-[11px] text-muted">5% watermark</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="frame grain relative bg-surface p-8 overflow-hidden">
+      <div class="mb-6 flex items-center justify-between"><span class="cap">Brand mark — static &amp; mid-typewriter</span></div>
+      <div class="flex flex-col gap-6">
+        <div>
+          <p class="font-mono text-[11px] text-muted mb-2">static (final)</p>
+          <div class="brand-final font-marker text-fg text-[40px] leading-none flex items-center"></div>
+        </div>
+        <div>
+          <p class="font-mono text-[11px] text-muted mb-2">mid-typewriter keyframe — letters arriving, dots still orange</p>
+          <div class="font-marker text-fg text-[40px] leading-none flex items-center">
+            <span>F</span><span class="text-[#EA580C] mx-[2px]">•</span><span>R</span><span class="text-[#EA580C] mx-[2px]">•</span><span>I</span><span class="text-[#EA580C] mx-[2px]">•</span><span class="opacity-30">E</span><span class="text-[#EA580C] mx-[2px] opacity-30">•</span><span class="opacity-0">N</span><span class="opacity-0">D</span><span class="opacity-0">S</span>
+          </div>
+        </div>
+        <span class="cap">duration:0.08 · delay:i*0.06 · easeOut · dots crossfade 0.4s</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 01 ============ -->
+<section id="sec01" class="section">
+  <h2 class="sec-head text-[40px] leading-none mb-2">01 — Landing</h2>
+  <p class="font-mono text-[13px] text-[#6b6257] mb-10 max-w-[640px]">Walk in off the street and into Central Perk. Brand mark types itself in on load; six picker cards; the couch glows orange behind everything.</p>
+
+  <div class="flex flex-wrap items-start gap-12">
+
+    <!-- 01.1 desktop light -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>01.1 — Landing</b><span class="dim">• desktop light • 1440×1500</span></div>
+      <div class="frame">
+        <div class="landing relative overflow-hidden" style="width:1440px;height:1500px"></div>
+      </div>
+    </div>
+
+    <!-- 01.2 desktop dark -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>01.2 — Landing</b><span class="dim">• desktop dark • 1440×1500</span></div>
+      <div class="frame">
+        <div class="landing dark relative overflow-hidden" style="width:1440px;height:1500px"></div>
+      </div>
+    </div>
+
+    <!-- 01.3 mobile -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>01.3 — Landing</b><span class="dim">• mobile • 390×1340</span></div>
+      <div class="frame">
+        <div class="landing-m relative overflow-hidden" style="width:390px;height:1340px"></div>
+      </div>
+      <div class="flex flex-wrap gap-2 max-w-[390px]"><span class="cap">single-column scroll</span><span class="cap">sticky CTA</span></div>
+    </div>
+
+    <!-- 01.4 brand mark mid-typewriter keyframe -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>01.4 — Brand mark, ~400ms in</b><span class="dim">• keyframe • 520×260</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex items-center justify-center" style="width:520px;height:260px">
+          <div class="text-center">
+            <div class="font-marker text-fg leading-none text-[56px] flex items-center justify-center">F<span class="text-[#EA580C] mx-[2px]">•</span>R<span class="text-[#EA580C] mx-[2px]">•</span>I<span class="text-[#EA580C] mx-[2px]">•</span>E<span class="text-[#EA580C] mx-[2px] opacity-40">•</span><span class="opacity-0">NDS</span></div>
+            <p class="font-mono text-[11px] text-muted mt-6">dots still orange · letters E→S not yet arrived</p>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[520px]"><span class="cap">duration:0.08 · delay:i*0.06 · ease:"easeOut" · dots crossfade orange→hue 0.4s</span></div>
+    </div>
+
+    <!-- 01.5 picker card hover zoomed -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>01.5 — Picker card hover</b><span class="dim">• zoomed • 360×300</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex items-center justify-center" style="width:360px;height:300px">
+          <div class="pcard scale-[1.03]" style="width:200px;box-shadow:0 18px 40px -18px rgba(234,88,12,0.55);outline:2px solid #0EA5E9;outline-offset:-2px">
+            <div class="marker" style="width:72px;height:72px;font-size:34px;background:#E0F2FE"><span style="color:#0EA5E9">C</span></div>
+            <p class="pname text-[16px]">Chandler</p>
+            <p class="ptag">could I BE more…</p>
+            <span class="mt-2 font-sans font-semibold text-[13px] text-accent">Chat →</span>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[360px]"><span class="cap">whileHover={{ scale: 1.03 }} · 0.15s easeOut · +2px accent ring</span></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ SECTION 02 ============ -->
+<section id="sec02" class="section">
+  <h2 class="sec-head text-[40px] leading-none mb-2">02 — Chat</h2>
+  <p class="font-mono text-[13px] text-[#6b6257] mb-10 max-w-[680px]">Talk to a character. Streaming RAG-grounded replies, a left rail of friends, "where to watch", and every loading / empty / typing state the SSE stream passes through. <span class="cap">POST /chat · SSE data:{"delta"}</span></p>
+
+  <div class="flex flex-wrap items-start gap-12">
+    <div class="frame-wrap">
+      <div class="frame-label"><b>02.1 — Chat, mid-conversation</b><span class="dim">• desktop light • 1440×940</span></div>
+      <div class="frame"><div class="chatslot" data-mode="convo" style="width:1440px;height:940px"></div></div>
+      <div class="max-w-[1440px] flex flex-wrap gap-2"><span class="cap">left rail w-[280px]</span><span class="cap">message: initial{opacity:0,y:4} → {1,0} · 0.2s easeOut</span><span class="cap-accent">where-to-watch: outline → fills on hover</span></div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><b>02.2 — Chat, mid-conversation</b><span class="dim">• desktop dark • 1440×940</span></div>
+      <div class="frame"><div class="chatslot dark" data-mode="convo" style="width:1440px;height:940px"></div></div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><b>02.3 — Empty state</b><span class="dim">• 1280×800</span></div>
+      <div class="frame"><div class="chatslot" data-mode="empty" data-norail="1" style="width:1280px;height:800px"></div></div>
+      <div class="max-w-[1280px]"><span class="cap">couch icon 24px + "the couch is empty — sit down."</span></div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><b>02.4 — Typing indicator</b><span class="dim">• 1280×800</span></div>
+      <div class="frame"><div class="chatslot" data-mode="typing" data-norail="1" style="width:1280px;height:800px"></div></div>
+      <div class="max-w-[1280px]"><span class="cap">3 dots · opacity .3→1→.3 · 1.4s loop</span></div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><b>02.5 — Where-to-watch, OPEN</b><span class="dim">• 1280×800</span></div>
+      <div class="frame"><div class="chatslot" data-mode="dropdown" data-norail="1" style="width:1280px;height:800px"></div></div>
+      <div class="max-w-[1280px]"><span class="cap">GET /watch?character=Joey → {options:[{service,url,type}]}</span></div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><b>02.6 — Mobile portrait</b><span class="dim">• 390×844</span></div>
+      <div class="frame" style="border-radius:36px"><div class="chatslot" data-mode="mobile" style="width:390px;height:844px;border-radius:35px"></div></div>
+      <div class="max-w-[390px]"><span class="cap">sticky composer · safe-area pad</span></div>
+    </div>
+
+    <div class="frame-wrap">
+      <div class="frame-label"><b>02.7 — Loading skeleton</b><span class="dim">• 1280×800</span></div>
+      <div class="frame"><div class="chatslot" data-mode="skeleton" data-norail="1" style="width:1280px;height:800px"></div></div>
+      <div class="max-w-[1280px]"><span class="cap">shimmer · before first SSE delta</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 03 ============ -->
+<section id="sec03" class="section">
+  <h2 class="sec-head text-[40px] leading-none mb-2">03 — Guess Who Said It</h2>
+  <p class="font-mono text-[13px] text-[#6b6257] mb-10 max-w-[680px]">A real line appears. You pick who said it, then watch our classifier take its own guess. Beating the AI is the whole point. <span class="cap">GET /game/round → {line, answer, classifier_pred, classifier_confidence}</span></p>
+
+  <div class="flex flex-wrap items-start gap-12">
+
+    <!-- 03.1 game start -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>03.1 — Game start</b><span class="dim">• 1080×720</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex items-center justify-center" style="width:1080px;height:720px">
+          <svg class="couch-wm" style="width:760px;left:50%;top:62%;transform:translate(-50%,-50%)" viewBox="0 0 128 72"><use href="#couch"/></svg>
+          <div class="relative text-center max-w-[560px] px-8">
+            <span class="inline-block font-sans font-semibold text-[12px] tracking-wider uppercase text-accent bg-bg border border-border rounded-full px-3 py-1 mb-5">Score 0 / 10</span>
+            <h3 class="font-marker text-fg text-[56px] leading-[0.95]">Guess Who Said It</h3>
+            <p class="font-sans text-[17px] text-muted leading-relaxed mt-5">We show you a real line from the show. You pick who said it. Then our AI classifier makes <i>its</i> guess — see if you can beat the machine.</p>
+            <div class="mt-8 flex items-center justify-center gap-3">
+              <button class="font-sans font-semibold text-white bg-accent rounded-full px-8 py-3.5 text-[16px] shadow-[0_8px_20px_-8px_rgba(234,88,12,0.7)] active:scale-[0.97] transition-transform">Start round →</button>
+              <button class="font-sans font-semibold text-fg border border-border rounded-full px-7 py-3.5 text-[16px] hover:bg-accent hover:text-white hover:border-accent transition-colors">Back to friends</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03.2 round in progress -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>03.2 — Round in progress</b><span class="dim">• 1080×720</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex flex-col" style="width:1080px;height:720px">
+          <div class="flex items-center justify-between px-10 pt-8">
+            <span class="font-mono text-[13px] text-muted">Round <b class="text-fg">3</b> / 10</span>
+            <span class="font-sans font-semibold text-[13px] text-accent">Score 2 / 2 ✓</span>
+          </div>
+          <div class="flex-1 flex flex-col items-center justify-center px-10 text-center">
+            <p class="font-sans text-[14px] text-muted uppercase tracking-wider mb-6">Who said this?</p>
+            <blockquote class="font-marker text-fg leading-[1.05] text-[52px] max-w-[760px]" style="text-wrap:balance">“We were on a break!”</blockquote>
+            <div class="flex flex-wrap justify-center gap-3 mt-12 max-w-[640px]">
+              <button class="chip">Monica</button><button class="chip">Joey</button><button class="chip">Ross</button><button class="chip">Chandler</button><button class="chip">Rachel</button><button class="chip">Phoebe</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[1080px]"><span class="cap">chip hover: translateY(-1px) + accent border</span></div>
+    </div>
+
+    <!-- 03.3 reveal CORRECT -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>03.3 — Reveal · CORRECT</b><span class="dim">• 1080×720</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex flex-col items-center justify-center px-10 text-center" style="width:1080px;height:720px">
+          <span class="anim-pop inline-flex items-center gap-2 font-sans font-bold text-[15px] text-white rounded-full px-5 py-2" style="background:#16A34A">✓ Correct!</span>
+          <blockquote class="font-marker text-fg leading-[1.05] text-[40px] max-w-[680px] mt-7">“We were on a break!”</blockquote>
+          <div class="flex items-center gap-4 mt-8">
+            <div class="marker" style="width:80px;height:80px;background:#D1FAE5"><span style="color:#059669">R</span></div>
+            <div class="text-left">
+              <div class="flex items-center gap-2"><svg style="width:22px;color:#EA580C" viewBox="0 0 128 72"><use href="#couch"/></svg><p class="font-sans font-bold text-[22px] text-fg">Ross</p></div>
+              <p class="font-sans text-[14px] text-muted">Your pick: Ross — nailed it.</p>
+            </div>
+          </div>
+          <div class="mt-9 w-[440px] max-w-full text-left">
+            <div class="flex items-center justify-between mb-1.5"><span class="font-mono text-[12px] text-muted">AI classifier guessed <b class="text-fg">Ross</b></span><span class="font-mono text-[12px] text-fg">78%</span></div>
+            <div class="h-2.5 rounded-full overflow-hidden" style="background:var(--border)"><div class="bar-fill h-full rounded-full" style="width:78%;background:#16A34A"></div></div>
+          </div>
+          <button class="mt-9 font-sans font-semibold text-white bg-accent rounded-full px-8 py-3 text-[15px] shadow-[0_8px_20px_-8px_rgba(234,88,12,0.7)] active:scale-[0.97] transition-transform">Next line →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03.4 reveal WRONG -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>03.4 — Reveal · WRONG</b><span class="dim">• 1080×720</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex flex-col items-center justify-center px-10 text-center" style="width:1080px;height:720px">
+          <span class="anim-pop inline-flex items-center gap-2 font-sans font-bold text-[15px] text-white rounded-full px-5 py-2" style="background:#DC2626">✕ Not quite</span>
+          <blockquote class="font-marker text-fg leading-[1.05] text-[40px] max-w-[680px] mt-7">“Could I BE wearing any more clothes?”</blockquote>
+          <div class="flex items-center gap-4 mt-8">
+            <div class="marker" style="width:80px;height:80px;background:#E0F2FE"><span style="color:#0EA5E9">C</span></div>
+            <div class="text-left">
+              <div class="flex items-center gap-2"><svg style="width:22px;color:#EA580C" viewBox="0 0 128 72"><use href="#couch"/></svg><p class="font-sans font-bold text-[22px] text-fg">Chandler</p></div>
+              <p class="font-sans text-[14px] text-muted">You said <span class="text-fg font-semibold">Ross</span> · it was <span class="text-fg font-semibold">Chandler</span>.</p>
+            </div>
+          </div>
+          <div class="mt-9 w-[440px] max-w-full text-left">
+            <div class="flex items-center justify-between mb-1.5"><span class="font-mono text-[12px] text-muted">AI classifier guessed <b class="text-fg">Chandler</b></span><span class="font-mono text-[12px] text-fg">91%</span></div>
+            <div class="h-2.5 rounded-full overflow-hidden" style="background:var(--border)"><div class="bar-fill h-full rounded-full" style="width:91%;background:#EA580C"></div></div>
+            <p class="font-mono text-[11px] text-muted mt-2">The AI got this one. 0–1 you.</p>
+          </div>
+          <button class="mt-9 font-sans font-semibold text-white bg-accent rounded-full px-8 py-3 text-[15px] shadow-[0_8px_20px_-8px_rgba(234,88,12,0.7)] active:scale-[0.97] transition-transform">Next line →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03.5 end of round -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>03.5 — End of round</b><span class="dim">• 1080×720</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex flex-col items-center justify-center px-10 text-center" style="width:1080px;height:720px">
+          <svg class="couch-wm" style="width:680px;left:50%;top:60%;transform:translate(-50%,-50%)" viewBox="0 0 128 72"><use href="#couch"/></svg>
+          <div class="relative">
+            <p class="font-sans text-[15px] text-muted uppercase tracking-wider">You scored</p>
+            <div class="font-marker text-accent leading-none text-[120px] mt-1">8/10</div>
+            <div class="mt-6 inline-flex items-stretch rounded-2xl border border-border overflow-hidden bg-surface">
+              <div class="px-8 py-4 text-center"><p class="font-mono text-[12px] text-muted">You</p><p class="font-marker text-fg text-[34px] leading-none mt-1">8</p></div>
+              <div class="w-px bg-border"></div>
+              <div class="px-8 py-4 text-center"><p class="font-mono text-[12px] text-muted">The AI</p><p class="font-marker text-muted text-[34px] leading-none mt-1">6</p></div>
+            </div>
+            <p class="font-marker text-[28px] mt-6" style="color:#16A34A">You beat the AI! 🏆</p>
+            <div class="mt-8 flex items-center justify-center gap-3">
+              <button class="font-sans font-semibold text-white bg-accent rounded-full px-8 py-3.5 text-[16px] shadow-[0_8px_20px_-8px_rgba(234,88,12,0.7)] active:scale-[0.97] transition-transform">Play again</button>
+              <button class="font-sans font-semibold text-fg border border-border rounded-full px-7 py-3.5 text-[16px] hover:bg-accent hover:text-white hover:border-accent transition-colors">Back to friends</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ SECTION 04 ============ -->
+<section id="sec04" class="section">
+  <h2 class="sec-head text-[40px] leading-none mb-2">04 — States &amp; Errors</h2>
+  <p class="font-mono text-[13px] text-[#6b6257] mb-10 max-w-[680px]">Every way the network or the user can fall off the couch — handled warmly, in voice, never scary.</p>
+
+  <div class="flex flex-wrap items-start gap-12">
+
+    <!-- 04.1 rate-limit toast -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>04.1 — Rate-limit toast</b><span class="dim">• 560×320</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex items-start justify-center pt-10 px-8" style="width:560px;height:320px">
+          <div class="anim-toast w-full max-w-[420px] flex items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3.5 shadow-lg" style="border-left:4px solid #DC2626">
+            <span class="shrink-0 mt-0.5 text-[#DC2626] text-[18px]">✕</span>
+            <div class="flex-1">
+              <p class="font-sans font-semibold text-[15px] text-fg">Whoa, slow down there, Joey.</p>
+              <p class="font-sans text-[13px] text-muted leading-snug mt-0.5">You've hit the message limit. Grab a coffee — try again in <b class="text-fg">28s</b>.</p>
+            </div>
+            <button class="shrink-0 text-muted hover:text-fg text-[16px] leading-none">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[560px]"><span class="cap">HTTP 429</span><span class="cap">toastIn 0.22s · auto-dismiss 5s</span></div>
+    </div>
+
+    <!-- 04.2 failed message + retry -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>04.2 — Failed message + retry</b><span class="dim">• zoomed • 560×320</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex items-center justify-center px-10" style="width:560px;height:320px">
+          <div class="w-full max-w-[420px]">
+            <div class="flex gap-3 items-end justify-end">
+              <div class="max-w-[320px]">
+                <div class="rounded-2xl rounded-br-md px-4 py-3 bg-bg border text-fg font-sans text-[15px] leading-[1.6]" style="border-color:#DC2626">What's the deal with the holiday armadillo?</div>
+                <div class="flex items-center justify-end gap-2 mt-1.5">
+                  <span class="font-mono text-[11px]" style="color:#DC2626">Couldn't send</span>
+                  <button class="inline-flex items-center gap-1 font-sans font-semibold text-[12px] text-accent border border-border rounded-full px-2.5 py-1 hover:bg-accent hover:text-white hover:border-accent transition-colors">↻ Retry</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[560px]"><span class="cap">bubble border → error</span><span class="cap">retry: POST /chat re-fire</span></div>
+    </div>
+
+    <!-- 04.3 404 -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>04.3 — 404</b><span class="dim">• 720×440</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex flex-col items-center justify-center text-center px-10" style="width:720px;height:440px">
+          <svg class="couch-wm" style="width:520px;left:50%;top:58%;transform:translate(-50%,-50%)" viewBox="0 0 128 72"><use href="#couch"/></svg>
+          <div class="relative">
+            <div class="font-marker text-accent text-[96px] leading-none">404</div>
+            <p class="font-marker text-fg text-[30px] mt-2">It's like… not happening.</p>
+            <p class="font-sans text-[15px] text-muted mt-3 max-w-[400px]">This page took a break and never came back.</p>
+            <a href="#sec01" class="inline-block mt-6 font-sans font-semibold text-white bg-accent rounded-full px-7 py-3 text-[15px] shadow-[0_8px_20px_-8px_rgba(234,88,12,0.7)]">Back to Central Perk</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04.4 offline -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>04.4 — Offline</b><span class="dim">• 720×440</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-bg flex flex-col items-center justify-center text-center px-10" style="width:720px;height:440px">
+          <svg style="width:64px;color:var(--muted);opacity:.5" viewBox="0 0 128 72"><use href="#couch"/></svg>
+          <p class="font-marker text-fg text-[28px] mt-5">Can't reach the chat server.</p>
+          <p class="font-sans text-[15px] text-muted mt-3 max-w-[420px]">The coffee machine's unplugged. Check your connection and we'll pour you another.</p>
+          <button class="mt-6 font-sans font-semibold text-fg border border-border rounded-full px-7 py-3 text-[15px] hover:bg-accent hover:text-white hover:border-accent transition-colors">↻ Try reconnecting</button>
+          <span class="cap mt-4">navigator.onLine === false</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04.5 confidence bar variants -->
+    <div class="frame-wrap">
+      <div class="frame-label"><b>04.5 — Classifier confidence — 3 variants</b><span class="dim">• 720×440</span></div>
+      <div class="frame">
+        <div class="grain relative overflow-hidden bg-surface flex flex-col justify-center gap-8 px-12" style="width:720px;height:440px">
+          <div>
+            <div class="flex items-center justify-between mb-2"><span class="font-sans text-[14px] text-fg"><b>High</b> — confident guess</span><span class="font-mono text-[13px] text-fg">90%</span></div>
+            <div class="h-3 rounded-full overflow-hidden" style="background:var(--border)"><div class="bar-fill h-full rounded-full" style="width:90%;background:#16A34A"></div></div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2"><span class="font-sans text-[14px] text-fg"><b>Medium</b> — a coin-flip, honestly</span><span class="font-mono text-[13px] text-fg">50%</span></div>
+            <div class="h-3 rounded-full overflow-hidden" style="background:var(--border)"><div class="bar-fill h-full rounded-full" style="width:50%;background:#EA580C"></div></div>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-2"><span class="font-sans text-[14px] text-fg"><b>Low</b> — the AI is just guessing</span><span class="font-mono text-[13px] text-fg">20%</span></div>
+            <div class="h-3 rounded-full overflow-hidden" style="background:var(--border)"><div class="bar-fill h-full rounded-full" style="width:20%;background:#DC2626"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="max-w-[720px]"><span class="cap">≥70% green · 40–69% orange · &lt;40% red</span></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ FOOTER (on canvas) ============ -->
+<footer class="px-14 py-10 text-center font-mono text-[12px] text-[#6b6257] border-t border-[#c2bcb0]">
+  Educational, non-commercial fan project. Friends™ is owned by Warner Bros.
+</footer>
+    </div><!-- /#canvas -->
+  </div><!-- /#viewport -->
+
+  <aside id="rightpanel">
+    <div class="rp-h"><span>Page</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#d4d0c8"></span><span>Canvas</span><span class="val">#D4D0C8</span></div>
+
+    <div class="rp-h"><span>Color styles</span><span style="color:#666">10</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#EA580C"></span><span>accent</span><span class="val">#EA580C</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#166534"></span><span>accent-2</span><span class="val">#166534</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#F5EFE3"></span><span>bg</span><span class="val">#F5EFE3</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#FFFBF5"></span><span>surface</span><span class="val">#FFFBF5</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#2C1F14"></span><span>fg</span><span class="val">#2C1F14</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#8B7355"></span><span>muted</span><span class="val">#8B7355</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:#DC2626"></span><span>error</span><span class="val">#DC2626</span></div>
+    <div class="rp-row"><span class="rp-sw" style="background:linear-gradient(90deg,#F87171 33%,#60A5FA 33% 66%,#FBBF24 66%)"></span><span>logo dots</span><span class="val">3</span></div>
+
+    <div class="rp-h"><span>Text styles</span><span style="color:#666">2</span></div>
+    <div class="rp-row"><span style="font-family:'Permanent Marker',cursive;color:#fff;font-size:15px">Aa</span><span>Permanent Marker</span></div>
+    <div class="rp-row"><span style="font-family:'DM Sans',sans-serif;color:#fff;font-weight:600">Aa</span><span>DM Sans</span></div>
+
+    <div class="rp-h"><span>Export</span></div>
+    <div class="rp-row"><span style="color:#9a9a9a">PNG · 2x · all frames</span></div>
+  </aside>
+</div><!-- /#workspace -->
+
+<!-- ============ ZOOM CONTROLS ============ -->
+<div id="zoombar">
+  <button id="zout" title="Zoom out (−)">−</button>
+  <button id="zval" title="Reset to 100%">40%</button>
+  <button id="zin" title="Zoom in (+)">+</button>
+  <span class="zsep"></span>
+  <button id="zfit" title="Zoom to fit (Shift+1)">Fit</button>
+</div>
+<div id="hudhint"><b>Scroll</b> to pan · <b>⌘/Ctrl + scroll</b> to zoom · <b>Space-drag</b> to grab · click a layer to focus</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- character data ---------- */
+  var C = {
+    Monica:   { i: "M", stroke: "#F43F5E", tint: "#FFE4E6", tag: "competitive & clean" },
+    Joey:     { i: "J", stroke: "#F59E0B", tint: "#FEF3C7", tag: "how you doin'?" },
+    Ross:     { i: "R", stroke: "#059669", tint: "#D1FAE5", tag: "we were on a break" },
+    Chandler: { i: "C", stroke: "#0EA5E9", tint: "#E0F2FE", tag: "could I BE more…" },
+    Rachel:   { i: "R", stroke: "#EC4899", tint: "#FCE7F3", tag: "it's a metaphor" },
+    Phoebe:   { i: "P", stroke: "#8B5CF6", tint: "#EDE9FE", tag: "smelly cat fan" }
+  };
+  var ORDER = ["Monica", "Joey", "Ross", "Chandler", "Rachel", "Phoebe"];
+
+  function markerHTML(name, size) {
+    var c = C[name];
+    var fs = Math.round(size * 0.46);
+    return '<div class="marker shrink-0" style="width:' + size + 'px;height:' + size + 'px;background:' + c.tint + '">' +
+      '<span style="color:' + c.stroke + ';font-size:' + fs + 'px">' + c.i + '</span></div>';
+  }
+
+  /* ---------- brand mark (FRIENDS dotted wordmark) ---------- */
+  var DOTHUE = ["#F87171", "#60A5FA", "#FBBF24"];
+  function brandMarkHTML() {
+    var letters = "FRIENDS".split(""), html = "", di = 0;
+    for (var i = 0; i < letters.length; i++) {
+      html += '<span class="bm-letter" style="animation-delay:' + (i * 0.06).toFixed(2) + 's">' + letters[i] + '</span>';
+      if (i < letters.length - 1) {
+        html += '<span class="bm-dot" data-final="' + DOTHUE[di % 3] + '" style="color:#EA580C;margin:0 2px">•</span>';
+        di++;
+      }
+    }
+    return html;
+  }
+  function runTypewriter(scope) {
+    (scope || document).querySelectorAll(".brand-type").forEach(function (el) {
+      if (el.dataset.done) return;
+      el.dataset.done = "1";
+      el.innerHTML = brandMarkHTML();
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var dots = el.querySelectorAll(".bm-dot");
+      setTimeout(function () {
+        dots.forEach(function (d) { d.style.color = d.dataset.final; });
+      }, reduce ? 0 : 820);
+    });
+  }
+  // static final-state brand marks (no animation, dots already colored)
+  function fillBrandFinal() {
+    document.querySelectorAll(".brand-final").forEach(function (el) {
+      var letters = "FRIENDS".split(""), html = "", di = 0;
+      for (var i = 0; i < letters.length; i++) {
+        html += "<span>" + letters[i] + "</span>";
+        if (i < letters.length - 1) { html += '<span style="color:' + DOTHUE[di % 3] + ';margin:0 2px">•</span>'; di++; }
+      }
+      el.innerHTML = html;
+    });
+  }
+
+  /* ---------- landing hero ---------- */
+  function friendsLine() {
+    var L = "FRIENDS".split(""), out = "", di = 0;
+    for (var i = 0; i < L.length; i++) {
+      out += "<span>" + L[i] + "</span>";
+      if (i < L.length - 1) { out += '<span class="d" style="color:' + DOTHUE[di % 3] + '">•</span>'; di++; }
+    }
+    return out;
+  }
+
+  function ccard(n) {
+    return '<div class="ccard sketch-frame" style="width:280px;height:300px">' +
+      '<svg class="sketch" viewBox="0 0 292 312" preserveAspectRatio="none"><rect x="6" y="6" width="280" height="300" rx="10"/></svg>' +
+      markerHTML(n, 86) +
+      '<p class="pname" style="font-size:22px;margin-top:16px">' + n + '</p>' +
+      '<p class="ptag" style="font-size:14px;margin-top:4px">' + C[n].tag + '</p>' +
+      '<span class="mt-auto font-sans font-bold text-[15px] text-accent" style="padding-top:14px">Chat →</span></div>';
+  }
+
+  function landingHero(h) {
+    h = h || 880;
+    return '<div class="hero-cp" style="height:' + h + 'px">' +
+      '<div class="hero-glow"></div>' +
+      '<div class="bokeh" style="width:160px;height:160px;left:62%;top:8%;background:#fb923c;opacity:.5"></div>' +
+      '<div class="bokeh" style="width:90px;height:90px;left:80%;top:22%;background:#fdba74;opacity:.45"></div>' +
+      '<div class="bokeh" style="width:120px;height:120px;left:18%;top:6%;background:#ea580c;opacity:.35"></div>' +
+      '<div class="hero-grain"></div>' +
+      /* slim site nav */
+      '<div class="absolute top-0 inset-x-0 flex items-center gap-8 px-14 py-6 z-20">' +
+        '<div class="flex items-center gap-2.5"><svg style="width:42px;color:#EA580C" viewBox="0 0 128 72"><use href="#couch"/></svg>' +
+        '<span class="font-marker text-[18px] text-white leading-none">the one with the AI</span></div>' +
+        '<nav class="ml-auto flex items-center gap-7 font-sans font-semibold text-[14px] text-white/85">' +
+          '<a href="#" class="hover:text-white">Chat</a><a href="#" class="hover:text-white">Guess Who</a><a href="#" class="hover:text-white">The Friends</a><a href="#" class="hover:text-white">About</a>' +
+        '</nav>' +
+      '</div>' +
+      /* couch centerpiece */
+      '<svg style="position:absolute;bottom:-26px;left:50%;transform:translateX(-50%);width:700px;z-index:5;filter:drop-shadow(0 30px 40px rgba(0,0,0,.5))" viewBox="0 0 680 320"><use href="#couch-lux"/></svg>' +
+      /* steam */
+      '<svg class="steam" style="position:absolute;bottom:150px;left:46%;width:120px;height:150px;z-index:6" viewBox="0 0 120 150" stroke-width="5"><path d="M40 150 C20 120 60 110 40 80 C24 56 56 44 42 14"/><path d="M82 150 C62 122 98 112 80 84 C64 60 96 50 82 22"/></svg>' +
+      /* beans doodle */
+      '<svg class="doodle" style="position:absolute;bottom:40px;left:48px;width:46px;transform:rotate(-18deg);z-index:6" viewBox="0 0 44 30"><use href="#bean"/></svg>' +
+      '<svg class="doodle" style="position:absolute;bottom:78px;left:104px;width:38px;transform:rotate(24deg);z-index:6" viewBox="0 0 44 30"><use href="#bean"/></svg>' +
+      /* copy block */
+      '<div class="absolute z-20" style="left:96px;top:170px;max-width:680px">' +
+        '<p class="font-sans font-bold tracking-[0.18em] text-[13px] text-white/70 mb-3">ENJOYED BEST WITH</p>' +
+        '<div class="friends-line text-[34px] mb-7">' + friendsLine() + '</div>' +
+        '<h1 class="font-marker text-white leading-[0.92] text-[88px]" style="text-shadow:3px 4px 0 rgba(0,0,0,.35)">The one with<br/>the <span class="text-accent">AI</span></h1>' +
+        '<p class="font-sans text-[20px] text-white/85 leading-relaxed mt-6 max-w-[520px]">Pull up a chair on the orange couch. Pick a friend and they\'ll talk right back — grounded in every line they ever said.</p>' +
+        '<div class="flex items-center gap-4 mt-9">' +
+          '<button class="font-marker tracking-wide text-white bg-accent rounded-[6px] px-9 py-4 text-[19px] shadow-[0_10px_28px_-8px_rgba(234,88,12,0.8)] active:scale-[0.97] transition-transform">Pick a friend →</button>' +
+          '<button class="font-marker tracking-wide text-white border-2 border-white/70 rounded-[6px] px-8 py-4 text-[19px] hover:bg-white hover:text-[#2C1F14] transition-colors">Play Guess Who</button>' +
+        '</div>' +
+        '<div class="flex items-center gap-2.5 mt-9">' +
+          '<span class="w-2.5 h-2.5 rounded-full bg-accent"></span><span class="w-2.5 h-2.5 rounded-full bg-white/35"></span><span class="w-2.5 h-2.5 rounded-full bg-white/35"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="hero-vig"></div>' +
+    '</div>';
+  }
+
+  function landingPicker(h) {
+    var cards = ORDER.map(ccard).join("");
+    return '<div class="grain relative bg-bg" style="height:' + h + 'px;overflow:hidden">' +
+      '<svg class="doodle" style="position:absolute;top:46px;left:60px;width:54px;transform:rotate(-12deg)" viewBox="0 0 44 30"><use href="#bean"/></svg>' +
+      '<svg class="doodle" style="position:absolute;top:90px;left:128px;width:40px;transform:rotate(20deg)" viewBox="0 0 44 30"><use href="#bean"/></svg>' +
+      '<svg class="doodle" style="position:absolute;top:60px;right:74px;width:58px;color:var(--accent);opacity:.4" viewBox="0 0 128 72"><use href="#couch"/></svg>' +
+      '<div class="relative h-full flex flex-col items-center pt-16 pb-14 px-12">' +
+        '<p class="font-marker text-accent text-[24px]">pull up a chair</p>' +
+        '<h2 class="font-marker text-fg text-[52px] leading-none mt-1 text-center">Who do you want to talk to?</h2>' +
+        '<p class="font-sans text-[17px] text-muted mt-4 max-w-[560px] text-center leading-relaxed">Six friends, waiting on the couch. Each one sounds just like the show — sarcastic, dramatic, smelly-cat-singing and all.</p>' +
+        '<div class="grid grid-cols-3 gap-8 mt-12">' + cards + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function landingHTML() {
+    return landingHero(880) + landingPicker(620);
+  }
+
+  function mcard(n) {
+    return '<div class="ccard sketch-frame" style="width:155px;height:172px;padding:16px 10px 12px">' +
+      '<svg class="sketch" viewBox="0 0 167 184" preserveAspectRatio="none"><rect x="6" y="6" width="155" height="172" rx="8"/></svg>' +
+      markerHTML(n, 58) +
+      '<p class="pname" style="font-size:15px;margin-top:9px">' + n + '</p>' +
+      '<p class="ptag" style="font-size:11px;margin-top:1px">' + C[n].tag + '</p></div>';
+  }
+
+  function landingMobile() {
+    var cards = ORDER.map(mcard).join("");
+    return '<div class="hero-cp" style="height:600px">' +
+        '<div class="hero-glow"></div>' +
+        '<div class="bokeh" style="width:120px;height:120px;left:60%;top:6%;background:#fb923c;opacity:.5"></div>' +
+        '<div class="hero-grain"></div>' +
+        '<div class="absolute top-0 inset-x-0 flex items-center px-5 py-5 z-20">' +
+          '<svg style="width:34px;color:#EA580C" viewBox="0 0 128 72"><use href="#couch"/></svg>' +
+          '<span class="ml-2 font-marker text-[14px] text-white leading-none">the one with the AI</span>' +
+          '<span class="ml-auto text-white/80 text-[20px]">☰</span>' +
+        '</div>' +
+        '<svg style="position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);width:400px;z-index:5;filter:drop-shadow(0 20px 24px rgba(0,0,0,.5))" viewBox="0 0 680 320"><use href="#couch-lux"/></svg>' +
+        '<svg class="doodle" style="position:absolute;bottom:30px;left:24px;width:34px;transform:rotate(-18deg);z-index:6" viewBox="0 0 44 30"><use href="#bean"/></svg>' +
+        '<div class="absolute z-20 px-6" style="top:96px">' +
+          '<p class="font-sans font-bold tracking-[0.16em] text-[11px] text-white/70 mb-2">ENJOYED BEST WITH</p>' +
+          '<div class="friends-line text-[22px] mb-4">' + friendsLine() + '</div>' +
+          '<h1 class="font-marker text-white leading-[0.95] text-[46px]" style="text-shadow:2px 3px 0 rgba(0,0,0,.35)">The one with<br/>the <span class="text-accent">AI</span></h1>' +
+          '<p class="font-sans text-[14px] text-white/85 leading-relaxed mt-3 max-w-[300px]">Pull up a chair. Pick a friend and they\'ll talk right back.</p>' +
+          '<button class="font-marker tracking-wide text-white bg-accent rounded-[6px] px-6 py-3 text-[16px] mt-5 shadow-[0_10px_24px_-8px_rgba(234,88,12,0.8)]">Pick a friend →</button>' +
+        '</div>' +
+        '<div class="hero-vig"></div>' +
+      '</div>' +
+      '<div class="grain relative bg-bg" style="height:740px;overflow:hidden">' +
+        '<div class="relative h-full flex flex-col items-center pt-10 px-6">' +
+          '<p class="font-marker text-accent text-[17px]">pull up a chair</p>' +
+          '<h2 class="font-marker text-fg text-[30px] leading-[0.95] mt-1 text-center">Who do you want<br/>to talk to?</h2>' +
+          '<div class="grid grid-cols-2 gap-4 mt-7">' + cards + '</div>' +
+          '<button class="font-marker tracking-wide text-white bg-accent rounded-[6px] w-full py-3.5 text-[16px] mt-7 shadow-[0_8px_20px_-8px_rgba(234,88,12,0.7)]">Play Guess Who Said It</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  /* ---------- chat shell ---------- */
+  var CONVO = [
+    { r: "a", t: "Oh good, a guest. Could I <i>BE</i> any more excited?" },
+    { r: "u", t: "Hey Chandler. Rough day at the office?" },
+    { r: "a", t: "I process numbers for a living and I genuinely cannot tell you what I do. So, you know — thriving." },
+    { r: "u", t: "Ha. Got any advice for a first date tonight?" },
+    { r: "a", t: "Sure: open with sarcasm, panic quietly, and eventually marry your best friend. Foolproof." }
+  ];
+
+  function bubble(m, animDelay) {
+    if (m.r === "a") {
+      return '<div class="anim-msg flex gap-3 items-end" style="animation-delay:' + animDelay + 's">' +
+        markerHTML("Chandler", 40) +
+        '<div class="max-w-[460px]"><div class="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6]" style="border-left:3px solid #0EA5E9;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">' + m.t + '</div></div></div>';
+    }
+    return '<div class="anim-msg flex gap-3 items-end justify-end" style="animation-delay:' + animDelay + 's">' +
+      '<div class="max-w-[460px]"><div class="rounded-2xl rounded-br-md px-4 py-3 bg-surface border border-border text-fg font-sans text-[15px] leading-[1.6]">' + m.t + '</div></div></div>';
+  }
+
+  function typingBubble() {
+    return '<div class="flex gap-3 items-end">' + markerHTML("Chandler", 40) +
+      '<div class="rounded-2xl rounded-bl-md px-5 py-4 bg-surface border border-border inline-flex items-center gap-1.5">' +
+      '<span class="typing-dot inline-block w-2 h-2 rounded-full bg-accent" style="animation-delay:0s"></span>' +
+      '<span class="typing-dot inline-block w-2 h-2 rounded-full bg-accent" style="animation-delay:.2s"></span>' +
+      '<span class="typing-dot inline-block w-2 h-2 rounded-full bg-accent" style="animation-delay:.4s"></span></div></div>';
+  }
+
+  function skeletonRows() {
+    return '<div class="flex gap-3 items-end"><div class="skeleton" style="width:40px;height:40px;border-radius:9999px"></div><div class="space-y-2"><div class="skeleton" style="width:320px;height:16px"></div><div class="skeleton" style="width:240px;height:16px"></div></div></div>' +
+      '<div class="flex justify-end mt-6"><div class="skeleton" style="width:260px;height:42px;border-radius:16px"></div></div>' +
+      '<div class="flex gap-3 items-end mt-6"><div class="skeleton" style="width:40px;height:40px;border-radius:9999px"></div><div class="space-y-2"><div class="skeleton" style="width:380px;height:16px"></div><div class="skeleton" style="width:300px;height:16px"></div><div class="skeleton" style="width:180px;height:16px"></div></div></div>';
+  }
+
+  function railHTML() {
+    var items = ORDER.map(function (n) {
+      var on = n === "Chandler";
+      return '<button class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ' +
+        (on ? "bg-bg" : "hover:bg-black/5") + '" ' + (on ? 'style="box-shadow:inset 0 0 0 1px var(--border)"' : "") + '>' +
+        markerHTML(n, 40) +
+        '<div class="min-w-0"><p class="font-sans font-semibold text-[14px] text-fg leading-tight">' + n + '</p>' +
+        '<p class="font-sans text-[12px] text-muted truncate">' + C[n].tag + '</p></div></button>';
+    }).join("");
+    return '<aside class="w-[280px] shrink-0 h-full bg-surface flex flex-col" style="border-right:1px solid var(--border)">' +
+      '<div class="px-5 py-5" style="border-bottom:1px solid var(--border)"><div class="font-marker text-fg text-[22px] flex items-center">F<span style="color:#F87171">•</span>R<span style="color:#60A5FA">•</span>I<span style="color:#FBBF24">•</span>E<span style="color:#F87171">•</span>N<span style="color:#60A5FA">•</span>D<span style="color:#FBBF24">•</span>S</div><p class="font-sans text-[11px] text-muted">the one with the AI</p></div>' +
+      '<div class="flex-1 overflow-hidden p-3 space-y-1">' + items + '</div>' +
+      '<div class="p-4" style="border-top:1px solid var(--border)"><button class="w-full font-sans font-semibold text-fg border border-border rounded-full py-2.5 text-[13px] hover:bg-accent hover:text-white hover:border-accent transition-colors">Play Guess Who</button></div>' +
+      '</aside>';
+  }
+
+  function header(showDropdown) {
+    return '<header class="shrink-0 flex items-center gap-3 px-7 py-4 bg-surface relative" style="border-bottom:1px solid var(--border)">' +
+      markerHTML("Chandler", 44) +
+      '<div class="flex-1"><p class="font-sans font-bold text-[16px] text-fg leading-tight">Chandler</p>' +
+      '<p class="font-sans text-[12px] text-muted flex items-center gap-1.5"><span class="inline-block w-1.5 h-1.5 rounded-full" style="background:#16A34A"></span>grounded · in character</p></div>' +
+      '<div class="relative"><button class="font-sans font-semibold text-[13px] rounded-full px-4 py-2 transition-colors ' +
+        (showDropdown ? "text-white bg-accent border border-accent" : "text-fg border border-border hover:bg-accent hover:text-white hover:border-accent") + '">Where to watch ▾</button>' +
+      (showDropdown ? watchDropdown() : "") + '</div></header>';
+  }
+
+  function watchDropdown() {
+    var opts = [
+      { s: "Max", t: "stream" }, { s: "Netflix", t: "stream" },
+      { s: "Prime Video", t: "buy" }, { s: "Apple TV", t: "buy" }
+    ];
+    var rows = opts.map(function (o) {
+      return '<a class="flex items-center justify-between px-4 py-2.5 hover:bg-bg transition-colors" href="#">' +
+        '<span class="font-sans text-[14px] text-fg font-medium">' + o.s + '</span>' +
+        '<span class="font-mono text-[11px] ' + (o.t === "stream" ? "text-accent" : "text-muted") + '">' + o.t + '</span></a>';
+    }).join("");
+    return '<div class="anim-msg absolute right-0 top-[calc(100%+10px)] z-20 w-[240px] rounded-xl bg-surface shadow-xl overflow-hidden" style="border:1px solid var(--border)">' +
+      '<p class="px-4 pt-3 pb-2 font-mono text-[11px] text-muted">Friends · where to watch</p>' + rows + '</div>';
+  }
+
+  function composer(mobile) {
+    return '<div class="shrink-0 p-4 bg-surface" style="border-top:1px solid var(--border)' + (mobile ? ';padding-bottom:24px' : '') + '">' +
+      '<div class="flex items-center gap-2 rounded-full bg-bg px-2 py-2" style="border:1px solid var(--border)">' +
+      '<input class="flex-1 bg-transparent outline-none px-3 font-sans text-[15px] text-fg placeholder:text-muted" placeholder="Say something to Chandler…" />' +
+      '<button class="shrink-0 w-10 h-10 rounded-full bg-accent text-white flex items-center justify-center active:scale-[0.96] transition-transform" style="font-size:18px">↑</button>' +
+      '</div></div>';
+  }
+
+  function thread(inner, pad) {
+    return '<div class="flex-1 overflow-hidden grain relative bg-bg"><div class="h-full ' + (pad || "px-8 py-7") + ' space-y-5">' + inner + '</div></div>';
+  }
+
+  function renderChat(slot) {
+    var mode = slot.dataset.mode;
+    var norail = slot.dataset.norail === "1";
+
+    if (mode === "mobile") {
+      var mInner = CONVO.map(function (m, i) { return bubble(m, i * 0.08); }).join("");
+      slot.innerHTML = '<div class="h-full flex flex-col bg-bg" style="border-radius:35px;overflow:hidden">' +
+        '<header class="shrink-0 flex items-center gap-2.5 px-4 py-3 bg-surface" style="border-bottom:1px solid var(--border)">' +
+        '<button class="text-muted text-[20px] leading-none px-1">‹</button>' + markerHTML("Chandler", 38) +
+        '<div class="flex-1"><p class="font-sans font-bold text-[15px] text-fg leading-tight">Chandler</p><p class="font-sans text-[11px] text-muted">in character</p></div>' +
+        '<button class="font-sans font-semibold text-[11px] text-fg border border-border rounded-full px-2.5 py-1.5">Watch ▾</button></header>' +
+        thread(mInner, "px-4 py-5") + composer(true) + '</div>';
+      return;
+    }
+
+    var body, drop = false;
+    if (mode === "convo") {
+      body = CONVO.map(function (m, i) { return bubble(m, i * 0.08); }).join("");
+    } else if (mode === "typing") {
+      body = CONVO.slice(0, 4).map(function (m, i) { return bubble(m, i * 0.08); }).join("") + typingBubble();
+    } else if (mode === "dropdown") {
+      body = CONVO.slice(0, 3).map(function (m, i) { return bubble(m, i * 0.08); }).join("");
+      drop = true;
+    } else if (mode === "skeleton") {
+      body = skeletonRows();
+    } else if (mode === "empty") {
+      body = '<div class="h-full flex flex-col items-center justify-center text-center">' +
+        '<svg style="width:54px;color:#EA580C" viewBox="0 0 128 72"><use href="#couch"/></svg>' +
+        '<p class="font-marker text-fg text-[30px] mt-5">the couch is empty —<br/>sit down.</p>' +
+        '<div class="mt-8 flex gap-3 items-end max-w-[480px]">' + markerHTML("Chandler", 40) +
+        '<div class="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6] text-left" style="border-left:3px solid #0EA5E9;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border)">Well, well, well. Look who finally showed up. Pull up a cushion — what do you want to talk about?</div></div></div>';
+    }
+
+    slot.innerHTML = '<div class="h-full flex bg-bg" style="overflow:hidden">' +
+      (norail ? "" : railHTML()) +
+      '<div class="flex-1 flex flex-col min-w-0">' + header(drop) + thread(body) + composer(false) + '</div></div>';
+  }
+
+  /* ---------- boot ---------- */
+  function boot() {
+    fillBrandFinal();
+    document.querySelectorAll(".landing").forEach(function (el) { el.innerHTML = landingHTML(); });
+    document.querySelectorAll(".landing-m").forEach(function (el) { el.innerHTML = landingMobile(); });
+    document.querySelectorAll(".chatslot").forEach(renderChat);
+    runTypewriter(document);
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+})();
+</script>
+
+<!-- PLACEHOLDER_JS -->
+<script>
+(function () {
+  "use strict";
+  var vp = document.getElementById("viewport");
+  var canvas = document.getElementById("canvas");
+  var zval = document.getElementById("zval");
+  var MIN = 0.08, MAX = 3;
+  var scale = 0.42, tx = 80, ty = 40;
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function apply() {
+    canvas.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")";
+    zval.textContent = Math.round(scale * 100) + "%";
+  }
+  function animTo() {
+    canvas.style.transition = "transform .36s cubic-bezier(.4,0,.2,1)";
+    apply();
+    clearTimeout(animTo._t);
+    animTo._t = setTimeout(function () { canvas.style.transition = "none"; }, 400);
+  }
+
+  /* ----- wheel: pan; ⌘/ctrl or pinch: zoom-to-cursor ----- */
+  vp.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    canvas.style.transition = "none";
+    if (e.ctrlKey || e.metaKey) {
+      var r = vp.getBoundingClientRect();
+      var cx = e.clientX - r.left, cy = e.clientY - r.top;
+      var ns = clamp(scale * Math.exp(-e.deltaY * 0.0016), MIN, MAX);
+      tx = cx - (cx - tx) * (ns / scale);
+      ty = cy - (cy - ty) * (ns / scale);
+      scale = ns;
+    } else {
+      tx -= e.deltaX; ty -= e.deltaY;
+    }
+    apply();
+  }, { passive: false });
+
+  /* ----- drag to pan (background or space-held hand tool) ----- */
+  var panning = false, sx = 0, sy = 0, stx = 0, sty = 0, space = false;
+  vp.addEventListener("pointerdown", function (e) {
+    var overFrame = e.target.closest(".frame");
+    var overCtl = e.target.closest("button, a, input");
+    if (space || e.button === 1 || (e.button === 0 && !overFrame && !overCtl)) {
+      panning = true; sx = e.clientX; sy = e.clientY; stx = tx; sty = ty;
+      vp.classList.add("grabbing"); canvas.style.transition = "none";
+      try { vp.setPointerCapture(e.pointerId); } catch (x) {}
+      e.preventDefault();
+    }
+  });
+  vp.addEventListener("pointermove", function (e) {
+    if (panning) { tx = stx + (e.clientX - sx); ty = sty + (e.clientY - sy); apply(); }
+  });
+  function endPan() { if (panning) { panning = false; vp.classList.remove("grabbing"); } }
+  vp.addEventListener("pointerup", endPan);
+  vp.addEventListener("pointercancel", endPan);
+
+  window.addEventListener("keydown", function (e) {
+    var t = e.target.tagName;
+    if (e.code === "Space" && t !== "INPUT" && t !== "TEXTAREA") { space = true; vp.classList.add("grab"); e.preventDefault(); }
+    if (e.key === "1" && e.shiftKey) { fit(); }
+    if (e.key === "0" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); zoomCenter(1 / scale); }
+  });
+  window.addEventListener("keyup", function (e) {
+    if (e.code === "Space") { space = false; vp.classList.remove("grab"); }
+  });
+
+  /* ----- zoom helpers ----- */
+  function zoomCenter(f) {
+    var vw = vp.clientWidth, vh = vp.clientHeight, cx = vw / 2, cy = vh / 2;
+    var ns = clamp(scale * f, MIN, MAX);
+    tx = cx - (cx - tx) * (ns / scale); ty = cy - (cy - ty) * (ns / scale);
+    scale = ns; animTo();
+  }
+  function fit() {
+    var w = canvas.scrollWidth || 3200;
+    var vw = vp.clientWidth;
+    scale = clamp((vw - 100) / w, MIN, MAX);
+    tx = (vw - w * scale) / 2; ty = 36; animTo();
+  }
+  function focusFrame(wrap) {
+    var cr = canvas.getBoundingClientRect(), r = wrap.getBoundingClientRect();
+    var fx = (r.left - cr.left) / scale, fy = (r.top - cr.top) / scale;
+    var fw = r.width / scale, fh = r.height / scale;
+    var vw = vp.clientWidth, vh = vp.clientHeight;
+    var ns = clamp(Math.min((vw - 140) / fw, (vh - 160) / fh), MIN, 1.4);
+    scale = ns; tx = (vw - fw * ns) / 2 - fx * ns; ty = (vh - fh * ns) / 2 - fy * ns; animTo();
+  }
+
+  document.getElementById("zin").onclick = function () { zoomCenter(1.25); };
+  document.getElementById("zout").onclick = function () { zoomCenter(0.8); };
+  document.getElementById("zfit").onclick = fit;
+  zval.onclick = function () { zoomCenter(1 / scale); };
+
+  /* ----- build the Figma layers tree from the DOM ----- */
+  function buildLayers() {
+    var host = document.getElementById("layers");
+    var secs = [
+      ["sec00", "Cover & Design System"], ["sec01", "Landing"],
+      ["sec02", "Chat"], ["sec03", "Guess Who"], ["sec04", "States & Errors"]
+    ];
+    secs.forEach(function (pair) {
+      var sec = document.getElementById(pair[0]); if (!sec) return;
+      var grp = document.createElement("div");
+      var h = document.createElement("div"); h.className = "lp-grp-h";
+      h.innerHTML = '<span class="chev">▾</span><span class="hash">#</span><span>' + pair[1] + "</span>";
+      var kids = document.createElement("div");
+      sec.querySelectorAll(".frame-wrap").forEach(function (wrap) {
+        var b = wrap.querySelector(".frame-label b"); if (!b) return;
+        var row = document.createElement("div"); row.className = "lp-layer";
+        row.innerHTML = '<span class="ic">▭</span><span>' + b.textContent.trim() + "</span>";
+        row.addEventListener("click", function () { focusFrame(wrap); });
+        kids.appendChild(row);
+      });
+      h.addEventListener("click", function () {
+        var hide = kids.style.display !== "none";
+        kids.style.display = hide ? "none" : "";
+        h.querySelector(".chev").textContent = hide ? "▸" : "▾";
+      });
+      grp.appendChild(h); grp.appendChild(kids); host.appendChild(grp);
+    });
+  }
+
+  function init() {
+    buildLayers();
+    fit();
+    setTimeout(function () { var hh = document.getElementById("hudhint"); if (hh) hh.style.opacity = "0"; }, 6000);
+  }
+  if (document.readyState !== "loading") setTimeout(init, 40);
+  else document.addEventListener("DOMContentLoaded", function () { setTimeout(init, 40); });
+})();
+</script>
+
+</body>
+</html>

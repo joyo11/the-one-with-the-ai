@@ -86,8 +86,11 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:3001",
-        "https://*.vercel.app",  # tighten before public deploy
+        "https://howudoinai.vercel.app",
+        "https://the-one-with-the-ai.vercel.app",
     ],
+    # Allow any preview/branch deploy on this Vercel project
+    allow_origin_regex=r"https://the-one-with-the-[a-z0-9-]+\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],

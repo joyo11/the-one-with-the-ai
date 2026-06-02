@@ -7,6 +7,7 @@ _Last updated: 2026-06-01_
 **Phase 2 (character classifier) — DONE.** 33.2% on isolated lines (weak signal as expected).
 **Phase 3 (chatbot baseline with RAG) — DONE.** All 6 characters voiced convincingly.
 **Phase 4 (eval harness) — DONE.** Real per-character scorecard built and saved.
+**Phase 6 (web UI + deploy) — DONE.** Live at https://howudoinai.vercel.app — chat + game both functional via Cloudflare Tunnel to the local FastAPI backend.
 
 ### Phase 4 final numbers (30 replies, 5 per character)
 - Overall classifier match rate: **80%** (vs 33% on isolated lines — confirmed the brief's design assumption that multi-sentence chatbot output is much easier than single lines)

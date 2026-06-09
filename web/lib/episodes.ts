@@ -1,0 +1,638 @@
+/** Curated episode + scene fixture for Pillar 5 (Episode Companion Mode).
+ *  Eight iconic episodes, each with 4-6 key scenes. Scene "detail" is what
+ *  gets injected into the character's system prompt when the user opens chat
+ *  from a scene — it tells the model where you are in canon. */
+
+import { type Character } from "@/lib/memory";
+
+/** One line of canonical-style dialogue inside a scene. Used by the
+ *  scene-player surface to auto-advance the moment, typewriter-paced. */
+export interface DialogueLine {
+  speaker: Character | "off"; // "off" = off-camera / non-character voice
+  text: string;
+  duration_ms?: number;  // override how long this line stays before the next; default ~3500ms
+}
+
+export interface Scene {
+  id: string;            // stable kebab id within the episode
+  title: string;         // short label shown in the timeline
+  characters: Character[]; // who's in this scene (drives "ask" buttons)
+  detail: string;        // injected into system prompt
+  iconic_line?: string;  // optional pull-quote for the scrubber
+  /** Optional canonical-style dialogue. When present, the scene becomes
+   *  playable via the scene-player surface. Absent → falls back to chat. */
+  dialogue?: DialogueLine[];
+}
+
+export interface Episode {
+  id: string;            // kebab — used in URL
+  season: number;
+  number: number;
+  title: string;         // canonical episode title
+  blurb: string;         // 1-line sell
+  scenes: Scene[];
+}
+
+export const EPISODES: Episode[] = [
+  {
+    id: "no-ones-ready",
+    season: 3,
+    number: 2,
+    title: "The One Where No One's Ready",
+    blurb: "Ross needs everyone ready for a benefit. Nobody is ready. Chandler is wearing every piece of clothing in the apartment.",
+    scenes: [
+      {
+        id: "ross-stresses",
+        title: "Ross is losing it about the benefit",
+        characters: ["Ross", "Rachel", "Joey", "Chandler", "Phoebe", "Monica"],
+        detail: "You are at the museum benefit moment. Ross is in his tux, melting down. Nobody else is ready. Joey and Chandler are fighting over the chair in the next room. You cannot be late — Carol will be there.",
+        iconic_line: "We have to be at the benefit in 28 minutes!",
+        dialogue: [
+          { speaker: "Ross", text: "We have to be there in 28 minutes! TWENTY-EIGHT.", duration_ms: 4200 },
+          { speaker: "Rachel", text: "I'm not even close to ready, I'm SO sorry, I'm sorry!" },
+          { speaker: "Ross", text: "This is the last thing — the LAST thing I needed tonight." },
+          { speaker: "Joey", text: "Hey hey hey — this chair is MINE, Chandler, get out!", duration_ms: 4000 },
+          { speaker: "Chandler", text: "Joey, you stood up. You stood up, the chair is MINE now. That's how it works." },
+          { speaker: "Ross", text: "Guys. GUYS. Can someone please just— be ready?" },
+          { speaker: "Phoebe", text: "Hey Ross, you look great, but maybe a less anxious smile, you know? Try a soft one." },
+          { speaker: "Ross", text: "Phoebe I don't even know what I'm doing here anymore.", duration_ms: 4000 },
+          { speaker: "Monica", text: "I just need ten more minutes — I'm replaying a voicemail Richard left.", duration_ms: 4500 },
+          { speaker: "Ross", text: "TEN minutes?? Monica are you SERIOUS right now??", duration_ms: 4200 },
+          { speaker: "Rachel", text: "Maybe if we just left like NOW, Carol would forgive—" },
+          { speaker: "Ross", text: "Carol forgiving me is the last thing I want to think about tonight, okay?", duration_ms: 5000 },
+        ],
+      },
+      {
+        id: "joey-chandler-chair",
+        title: "Joey & Chandler fighting over the chair",
+        characters: ["Joey", "Chandler"],
+        detail: "Joey just got out of the chair. Chandler took the cushions. Joey is plotting revenge. You're in the middle of the chair war right now.",
+        iconic_line: "All right, Chandler, the chair is mine.",
+        dialogue: [
+          { speaker: "Joey", text: "I got up for ONE second to grab a soda, Chandler!" },
+          { speaker: "Chandler", text: "That's how chairs work, my friend. Empty chair, new owner." },
+          { speaker: "Joey", text: "It's MY chair. I sat on it FIRST. I named it. Her name is Rosita." },
+          { speaker: "Chandler", text: "Rosita is fine with this arrangement, you can ask her." },
+          { speaker: "Joey", text: "I don't have to ask. She TOLD me. With her cushions." },
+          { speaker: "Chandler", text: "She told you. With her CUSHIONS." },
+          { speaker: "Joey", text: "Don't talk to my chair like she's stupid, Chandler." },
+          { speaker: "Chandler", text: "Joey — Joey, I am SITTING in her right now. She is MY chair." },
+          { speaker: "Joey", text: "Then I'm gonna do something. Something BAD.", duration_ms: 4500 },
+        ],
+      },
+      {
+        id: "chandler-all-clothes",
+        title: "Chandler in all of Joey's clothes",
+        characters: ["Chandler", "Joey"],
+        detail: "You (Chandler) just put on EVERY piece of clothing Joey owns — all the shirts, all the pants, layered. As payback for the chair. You are sitting in the living room making a point. Could you BE wearing any more clothes.",
+        iconic_line: "Could I BE wearing any more clothes?",
+        dialogue: [
+          { speaker: "Chandler", text: "Could I BE wearing any more clothes?", duration_ms: 4500 },
+          { speaker: "Chandler", text: "Maybe if I was vacationing in the ARCTIC. Wait no, still no." },
+          { speaker: "Joey", text: "Why does my shirt look like a BEDSPREAD on you?" },
+          { speaker: "Chandler", text: "Because I am wearing seven of them, Joey." },
+          { speaker: "Joey", text: "Oh my god. Oh my GOD. Take those off." },
+          { speaker: "Chandler", text: "NO. This is a statement." },
+          { speaker: "Joey", text: "A statement that you're gonna sweat to death in MY clothes!" },
+          { speaker: "Chandler", text: "I'm not gonna sweat. I'm gonna do LUNGES." },
+          { speaker: "Joey", text: "You wouldn't." },
+          { speaker: "Chandler", text: "Watch me.", duration_ms: 4500 },
+        ],
+      },
+      {
+        id: "rachel-cannot-pick",
+        title: "Rachel can't pick an outfit",
+        characters: ["Rachel", "Monica"],
+        detail: "You (Rachel) have changed four times. Nothing looks right. Ross is melting down in the living room. You're trying to look amazing because his ex Carol will be there. The pressure is real.",
+        iconic_line: "I don't know what to wear!",
+        dialogue: [
+          { speaker: "Rachel", text: "This one? No. THIS one? No." },
+          { speaker: "Rachel", text: "Why does NOTHING look right today??" },
+          { speaker: "Monica", text: "Rachel — Rachel are you READY yet??" },
+          { speaker: "Rachel", text: "I am SO not ready, Monica — I have NOTHING!" },
+          { speaker: "Monica", text: "You have a closet the SIZE of my kitchen!" },
+          { speaker: "Rachel", text: "That's the PROBLEM. Too many choices. HELP!" },
+          { speaker: "Monica", text: "Pick the navy one. Or the burgundy. Or the green. Just PICK." },
+          { speaker: "Rachel", text: "But Carol's gonna be there and she's so — perfect." },
+          { speaker: "Monica", text: "Carol is a LESBIAN, Rachel. She is not judging your dress." },
+          { speaker: "Rachel", text: "Mon, EVERYONE judges the dress.", duration_ms: 4500 },
+        ],
+      },
+      {
+        id: "monica-message",
+        title: "Monica obsessing over Richard's voicemail",
+        characters: ["Monica", "Rachel"],
+        detail: "You're (Monica) replaying a voicemail Richard left months ago. You think he might have left it after the breakup, not before. You are not getting ready for the benefit.",
+        dialogue: [
+          { speaker: "Monica", text: "Okay one more time. Just one MORE time.", duration_ms: 4500 },
+          { speaker: "Monica", text: "(replays) — 'Mon, I just wanted to say…'" },
+          { speaker: "Monica", text: "Was that AFTER the breakup or BEFORE? Because if it was after he—" },
+          { speaker: "Rachel", text: "Monica are you listening to that voicemail AGAIN??" },
+          { speaker: "Monica", text: "NO." },
+          { speaker: "Rachel", text: "I can HEAR it, Monica!" },
+          { speaker: "Monica", text: "It's — it's background noise! It's white noise! It's NOTHING." },
+          { speaker: "Rachel", text: "It is literally Richard's VOICE." },
+          { speaker: "Monica", text: "…okay just one more time.", duration_ms: 4200 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "everybody-finds-out",
+    season: 5,
+    number: 14,
+    title: "The One Where Everybody Finds Out",
+    blurb: "Phoebe knows. Chandler & Monica think Phoebe knows. Phoebe knows they know she knows. They don't know that.",
+    scenes: [
+      {
+        id: "phoebe-sees-them",
+        title: "Phoebe sees Monica & Chandler through Ross's new place",
+        characters: ["Phoebe", "Rachel"],
+        detail: "You (Phoebe) are looking out a window at Ross's new apartment and you JUST saw Monica and Chandler doing it across the street. Your brain is melting. Rachel is next to you.",
+        iconic_line: "My eyes! My eyes!",
+        dialogue: [
+          { speaker: "Phoebe", text: "MY EYES.", duration_ms: 3000 },
+          { speaker: "Phoebe", text: "MY EYES, RACHEL!", duration_ms: 3000 },
+          { speaker: "Rachel", text: "What?!" },
+          { speaker: "Phoebe", text: "Chandler and Monica! DOING IT! In the WINDOW!" },
+          { speaker: "Rachel", text: "What?!" },
+          { speaker: "Phoebe", text: "I just SAW it — I cannot UN-see it — my eyes are RUINED." },
+          { speaker: "Rachel", text: "Oh my God!" },
+          { speaker: "Phoebe", text: "We have to do something. We have to MESS WITH THEM." },
+          { speaker: "Rachel", text: "We absolutely have to mess with them. Plan?" },
+          { speaker: "Phoebe", text: "Plan.", duration_ms: 3500 },
+        ],
+      },
+      {
+        id: "phoebe-hits-on-chandler",
+        title: "Phoebe hits on Chandler to mess with them",
+        characters: ["Phoebe", "Chandler"],
+        detail: "You and Rachel know about Chandler & Monica. They don't know you know. Phoebe's strategy: hit on Chandler ridiculously to make him break and confess. You're playing seduction chicken in Monica's apartment.",
+        iconic_line: "Doesn't he look cute today?",
+        dialogue: [
+          { speaker: "Phoebe", text: "(sultry) Hi, Chandler." },
+          { speaker: "Chandler", text: "...hi." },
+          { speaker: "Phoebe", text: "Doesn't he look CUTE today?", duration_ms: 4500 },
+          { speaker: "Chandler", text: "Am I — am I cute today? Did I do something different?" },
+          { speaker: "Phoebe", text: "Mmm. You're just so... handsome." },
+          { speaker: "Chandler", text: "Are you having a stroke? Phoebe are you okay?" },
+          { speaker: "Phoebe", text: "I am not having a stroke, Chandler. I'm flirting." },
+          { speaker: "Chandler", text: "With ME??" },
+          { speaker: "Phoebe", text: "Why is that surprising. You're a very attractive man." },
+          { speaker: "Chandler", text: "This is — this is too much for me right now.", duration_ms: 4500 },
+        ],
+      },
+      {
+        id: "they-dont-know-that-we-know",
+        title: "Chandler & Monica realize Phoebe knows",
+        characters: ["Chandler", "Monica"],
+        detail: "Phoebe just hit on Chandler. Out of nowhere. You (Chandler & Monica) are figuring out together that she must know. Then you decide: they don't know that we know they know we know.",
+        iconic_line: "They don't know that we know they know we know!",
+        dialogue: [
+          { speaker: "Chandler", text: "Mon. MONICA. Phoebe just hit on me. Like AGGRESSIVELY." },
+          { speaker: "Monica", text: "Wait — WHAT?" },
+          { speaker: "Chandler", text: "She knows. She KNOWS about us." },
+          { speaker: "Monica", text: "Oh no oh no oh no." },
+          { speaker: "Chandler", text: "She's trying to make ME break. She's MESSING with us." },
+          { speaker: "Monica", text: "Okay. Okay. So WE mess back. We mess WAY back." },
+          { speaker: "Chandler", text: "They don't know that we know they know." },
+          { speaker: "Monica", text: "EXACTLY. They don't know that we know they know we know!", duration_ms: 5000 },
+          { speaker: "Chandler", text: "...wait, what?" },
+          { speaker: "Monica", text: "Just GO WITH IT.", duration_ms: 4000 },
+        ],
+      },
+      {
+        id: "joey-out-of-loop",
+        title: "Joey is the only one not in the loop",
+        characters: ["Joey"],
+        detail: "Phoebe knows. Rachel knows. Chandler and Monica know that Phoebe knows. You (Joey) are losing your mind because you've been keeping this secret for MONTHS and now everyone except Ross is in the loop and you can't keep track anymore.",
+        iconic_line: "I can't take it anymore!",
+        dialogue: [
+          { speaker: "Joey", text: "I CAN'T TAKE IT.", duration_ms: 3500 },
+          { speaker: "Joey", text: "Okay so — Phoebe knows that Monica and Chandler are doing it." },
+          { speaker: "Joey", text: "And Rachel knows that Phoebe knows. And NOW Monica and Chandler know that Phoebe knows." },
+          { speaker: "Joey", text: "And I knew FIRST. Before any of them. ME." },
+          { speaker: "Joey", text: "And I had to keep that secret. For MONTHS." },
+          { speaker: "Joey", text: "Joey Tribbiani. Keeping a secret. For MONTHS." },
+          { speaker: "Joey", text: "Do you know what that did to me?? I haven't slept right since November!", duration_ms: 4500 },
+          { speaker: "Joey", text: "AND NOW EVERYBODY KNOWS EXCEPT ROSS.", duration_ms: 4000 },
+          { speaker: "Joey", text: "Which means I STILL have a secret. From Ross." },
+          { speaker: "Joey", text: "I have to lie down.", duration_ms: 3500 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "embryos",
+    season: 4,
+    number: 12,
+    title: "The One With the Embryos",
+    blurb: "Ross creates a quiz to settle who knows the apartment better. Stakes: the apartment itself.",
+    scenes: [
+      {
+        id: "the-bet",
+        title: "Ross proposes the bet",
+        characters: ["Ross", "Monica", "Rachel", "Chandler", "Joey"],
+        detail: "You're all in Monica & Rachel's apartment. The girls think they know the boys better than the boys know them. You're escalating the stakes. By the end of the scene, the apartment is on the table.",
+        dialogue: [
+          { speaker: "Ross", text: "Okay! Final category — fine, FINE — the apartment." },
+          { speaker: "Monica", text: "We are GOING to win this. The boys don't know us." },
+          { speaker: "Rachel", text: "We know EVERYTHING about them." },
+          { speaker: "Joey", text: "Oh yeah?? What is Chandler's job, then?" },
+          { speaker: "Rachel", text: "He's a... transponster!", duration_ms: 4000 },
+          { speaker: "Chandler", text: "That is NOT EVEN A WORD!" },
+          { speaker: "Ross", text: "Oooooooohhhh!" },
+          { speaker: "Monica", text: "Wait — what IS his job, then?" },
+          { speaker: "Chandler", text: "I am NOT telling you." },
+          { speaker: "Ross", text: "If you ladies lose this — you have to give up the apartment." },
+          { speaker: "Rachel", text: "YOU'RE ON.", duration_ms: 4000 },
+        ],
+      },
+      {
+        id: "lightning-round",
+        title: "The lightning round",
+        characters: ["Ross", "Monica", "Rachel"],
+        detail: "You (Ross) are the host with the index cards. The lightning round is happening. The girls need 3 right in 10 seconds. They're stuck on Chandler's job.",
+        iconic_line: "Transponster!",
+        dialogue: [
+          { speaker: "Ross", text: "Lightning round! Ten seconds, three answers, GO!" },
+          { speaker: "Ross", text: "Correct! What is Chandler Bing's job?" },
+          { speaker: "Rachel", text: "OH! OH! He's a TRANSPONSTER!", duration_ms: 4200 },
+          { speaker: "Ross", text: "NO. That's not even a word!" },
+          { speaker: "Monica", text: "It's NOT a word!" },
+          { speaker: "Rachel", text: "But it — it SOUNDS right!" },
+          { speaker: "Ross", text: "Five seconds!" },
+          { speaker: "Monica", text: "Just GUESS — statistical analysis — data — reconfiguration!" },
+          { speaker: "Ross", text: "Time's UP." },
+          { speaker: "Monica", text: "NOOOOOOO!" },
+          { speaker: "Rachel", text: "HOW DID WE LOSE??", duration_ms: 4000 },
+        ],
+      },
+      {
+        id: "chandlers-job",
+        title: "What Chandler's actual job is",
+        characters: ["Chandler", "Rachel"],
+        detail: "You (Chandler) — Rachel just guessed your job is 'transponster.' You don't even know what your own actual job is sometimes (something with WENUS reports, statistical analysis). You're losing it.",
+        dialogue: [
+          { speaker: "Chandler", text: "My job is — okay — I'm in charge of —" },
+          { speaker: "Chandler", text: "I do statistical analysis and data reconfiguration." },
+          { speaker: "Rachel", text: "That sounds like a ROBOT'S job." },
+          { speaker: "Chandler", text: "It IS a robot's job. That's why I hate it." },
+          { speaker: "Rachel", text: "Why don't you just QUIT, Chandler?" },
+          { speaker: "Chandler", text: "Because — the money is — fine, the money is good." },
+          { speaker: "Rachel", text: "Chandler. You make people SAD all day." },
+          { speaker: "Chandler", text: "It's WENUS reports, Rachel. WENUS reports." },
+          { speaker: "Rachel", text: "...did you just say WENUS??", duration_ms: 4500 },
+        ],
+      },
+      {
+        id: "phoebe-embryos",
+        title: "Phoebe gets the news",
+        characters: ["Phoebe"],
+        detail: "You (Phoebe) are at the doctor about the embryo implantation — you're the surrogate for Frank Jr. and Alice. This is a huge moment but the boys/girls quiz drama is happening in parallel.",
+        dialogue: [
+          { speaker: "Phoebe", text: "Okay so — the implantation — went well?" },
+          { speaker: "off", text: "Yes, Phoebe. All five embryos were successfully implanted." },
+          { speaker: "Phoebe", text: "FIVE??? Five tiny Frank-Jr.-and-Alice babies are in me RIGHT NOW??", duration_ms: 5000 },
+          { speaker: "off", text: "Statistically, only one or two will take." },
+          { speaker: "Phoebe", text: "But physically — physically — I have FIVE little guys up in there!" },
+          { speaker: "Phoebe", text: "Hi guys! It's the surrogate! It's the place you live now! For a while!", duration_ms: 4500 },
+          { speaker: "Phoebe", text: "Frank Jr. is gonna FREAK.", duration_ms: 3500 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "prom-video",
+    season: 2,
+    number: 14,
+    title: "The One With the Prom Video",
+    blurb: "Joey gives Chandler a hideous gold bracelet. The gang watches a VHS of Monica's prom night.",
+    scenes: [
+      {
+        id: "the-bracelet",
+        title: "Joey's gold bracelet for Chandler",
+        characters: ["Joey", "Chandler"],
+        detail: "You (Joey) bought Chandler a giant gold 'best buds' bracelet. He hates it but won't say so. You're hurt but proud. He's wearing it. It's loud.",
+        iconic_line: "You are my best bud!",
+        dialogue: [
+          { speaker: "Joey", text: "BUDDY. Open it. OPEN IT." },
+          { speaker: "Chandler", text: "(opens) ...wow. That is — a very LARGE piece of jewelry.", duration_ms: 4500 },
+          { speaker: "Joey", text: "You're my BEST BUD. So now you have a bracelet that SAYS THAT." },
+          { speaker: "Chandler", text: "It DOES say that. It says BEST BUDS. In rhinestones." },
+          { speaker: "Joey", text: "Try it on!" },
+          { speaker: "Chandler", text: "Try it... on. Right now. On my body. Okay." },
+          { speaker: "Joey", text: "YEAH! Come on!" },
+          { speaker: "Chandler", text: "It is — surprisingly heavy. That's heavy." },
+          { speaker: "Joey", text: "That's because it's REAL GOLD, Chandler." },
+          { speaker: "Chandler", text: "(under breath) Why did he buy me a bracelet.", duration_ms: 4500 },
+        ],
+      },
+      {
+        id: "rachel-makeover",
+        title: "Teenage Monica & Rachel get ready for prom",
+        characters: ["Rachel", "Monica"],
+        detail: "On the VHS — teenage you. Rachel is the popular thin one. Monica is bigger, in giant glasses. You're both psyched. Rachel's date doesn't show. Monica panics.",
+        dialogue: [
+          { speaker: "Rachel", text: "Mon! Mon! Do my hair! Like the picture, Mon!" },
+          { speaker: "Monica", text: "Okay okay turn around. Are you SURE about Chip?" },
+          { speaker: "Rachel", text: "He's the cutest guy in school, Monica!" },
+          { speaker: "Monica", text: "He's also... not always NICE." },
+          { speaker: "Rachel", text: "He is NICE TO ME." },
+          { speaker: "Monica", text: "Okay, well — I'm gonna fix my hair too, because Roy is taking me." },
+          { speaker: "Rachel", text: "Roy? Roy from gym class Roy?" },
+          { speaker: "Monica", text: "He's nice and he's not embarrassed by me — and that's a LOT, Rachel." },
+          { speaker: "Rachel", text: "(in mirror) Oh my GOD Mon you are SO talented.", duration_ms: 4500 },
+        ],
+      },
+      {
+        id: "ross-tux",
+        title: "Ross puts on his dad's tux to take Rachel",
+        characters: ["Ross"],
+        detail: "On the VHS — Rachel's prom date never showed. You (Ross) hear this in the next room. You grab your dad's tux and run downstairs to take her. Then Chip the date shows up. Younger you melts.",
+        iconic_line: "He's her lobster!",
+        dialogue: [
+          { speaker: "Ross", text: "(off, overhearing) Wait — Chip's not coming??" },
+          { speaker: "Ross", text: "He's not coming? He's not — he can't NOT come!" },
+          { speaker: "Ross", text: "Dad! Dad where's your tux? The other one, the dark one!", duration_ms: 4500 },
+          { speaker: "Ross", text: "I'm gonna — I'm gonna take her. To the prom." },
+          { speaker: "Ross", text: "Just have to put this on without — (riiip) — okay I just ripped a seam." },
+          { speaker: "Ross", text: "I'm gonna take her with a ripped seam, it's fine, this is fine." },
+          { speaker: "Ross", text: "(downstairs) Rachel! Hi — I — I can take you, I have a tux —" },
+          { speaker: "Ross", text: "Oh. Oh. Chip came. That's — that's GREAT.", duration_ms: 5000 },
+        ],
+      },
+      {
+        id: "lobsters",
+        title: "Phoebe declares Ross is Rachel's lobster",
+        characters: ["Phoebe"],
+        detail: "You (Phoebe) just watched the prom video where Ross was about to take Rachel. You declared: 'He's her lobster.' Lobsters mate for life. You're sure.",
+        dialogue: [
+          { speaker: "Phoebe", text: "He's her LOBSTER.", duration_ms: 4500 },
+          { speaker: "Phoebe", text: "Lobsters mate for life." },
+          { speaker: "Phoebe", text: "You can see old lobster couples in the tank — holding claws." },
+          { speaker: "Phoebe", text: "It's the most BEAUTIFUL thing." },
+          { speaker: "Phoebe", text: "That's Ross. That's Rachel. They're lobsters." },
+          { speaker: "Phoebe", text: "I am NEVER wrong about lobsters.", duration_ms: 4500 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "thanksgiving-flashbacks",
+    season: 5,
+    number: 8,
+    title: "The One With All the Thanksgivings",
+    blurb: "Bad Thanksgivings, including the one with the turkey on Joey's head and the one where Monica cuts off Chandler's toe.",
+    scenes: [
+      {
+        id: "turkey-on-head",
+        title: "Joey with a turkey on his head",
+        characters: ["Joey", "Monica"],
+        detail: "You (Joey) put the empty turkey carcass on your head to scare Chandler. Now you can't get it off. Monica's the one who has to get it off you while trying to also charm Chandler.",
+        iconic_line: "I can't get it off!",
+        dialogue: [
+          { speaker: "Joey", text: "Mon. Mon. MON. I have a turkey on my head." },
+          { speaker: "Monica", text: "I — I can SEE that, Joey." },
+          { speaker: "Joey", text: "I can't get it OFF!" },
+          { speaker: "Monica", text: "Why is the turkey ON YOUR HEAD?", duration_ms: 4500 },
+          { speaker: "Joey", text: "I was trying to scare Chandler!" },
+          { speaker: "Monica", text: "With a TURKEY?" },
+          { speaker: "Joey", text: "I thought it would be funny! It WAS funny!" },
+          { speaker: "Monica", text: "Joey it is now IN your HAIR — I am going to PULL." },
+          { speaker: "Joey", text: "AHH OW OW THAT'S MY EAR." },
+          { speaker: "Monica", text: "Stop MOVING!" },
+          { speaker: "Joey", text: "I CAN'T SEE!", duration_ms: 4000 },
+        ],
+      },
+      {
+        id: "young-monica-toe",
+        title: "Monica accidentally cuts off Chandler's toe",
+        characters: ["Monica", "Chandler"],
+        detail: "Flashback. Monica was trying to revenge-seduce Chandler. She dropped a knife. His toe came off. He didn't speak to her family for years. This is why he hates Thanksgiving.",
+        dialogue: [
+          { speaker: "Monica", text: "I'll just go up there. He'll see how much weight I lost." },
+          { speaker: "Monica", text: "And it'll RUIN him." },
+          { speaker: "Chandler", text: "(off) Joey said your sister Monica is going to seduce me??" },
+          { speaker: "Monica", text: "(mishearing — drops knife) AAHHHHH MY GOD!", duration_ms: 4500 },
+          { speaker: "Chandler", text: "OH — OH — OH MY GOD that is a TOE." },
+          { speaker: "Monica", text: "I am SO SORRY. I am SO SORRY." },
+          { speaker: "Chandler", text: "That used to be — a TOE!" },
+          { speaker: "Monica", text: "I'm getting a bag — I'm GETTING a BAG!" },
+          { speaker: "Chandler", text: "I never want to see this woman again.", duration_ms: 5000 },
+        ],
+      },
+      {
+        id: "i-love-you-monica",
+        title: "Chandler accidentally says it",
+        characters: ["Chandler", "Monica"],
+        detail: "You (Chandler) just blurted out 'I love you' to Monica. You're trying to take it back because it's only been a few months. She's standing there with the turkey on her head trying to make it ok.",
+        dialogue: [
+          { speaker: "Chandler", text: "I love you.", duration_ms: 3500 },
+          { speaker: "Monica", text: "What?" },
+          { speaker: "Chandler", text: "Nothing! Did I say something?" },
+          { speaker: "Monica", text: "Chandler. You said you LOVE me." },
+          { speaker: "Chandler", text: "I — okay — I said it. But I didn't mean —" },
+          { speaker: "Monica", text: "You didn't MEAN it??" },
+          { speaker: "Chandler", text: "NO I MEAN — I MEANT it, I just didn't mean to SAY it —" },
+          { speaker: "Monica", text: "Because — we've only been together a few months and —" },
+          { speaker: "Chandler", text: "Yeah, yeah, exactly. Way too soon. Scary. Terrifying. Best to forget I said it." },
+          { speaker: "Monica", text: "Chandler. I love you too.", duration_ms: 5000 },
+          { speaker: "Chandler", text: "You — really?", duration_ms: 3500 },
+          { speaker: "Monica", text: "(turkey on head) Yeah.", duration_ms: 4000 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "the-prom",
+    season: 9,
+    number: 17,
+    title: "The One With Rachel's Other Sister",
+    blurb: "Amy comes to Thanksgiving. Amy is awful. Ross and Rachel disagree about Emma's guardianship.",
+    scenes: [
+      {
+        id: "amy-arrives",
+        title: "Amy crashes Thanksgiving",
+        characters: ["Rachel", "Monica"],
+        detail: "Your sister Amy just showed up at Monica's Thanksgiving uninvited. She's already insulted three people. She wants something. You're embarrassed and bracing.",
+        dialogue: [
+          { speaker: "Rachel", text: "Oh god. Oh GOD she's HERE.", duration_ms: 4000 },
+          { speaker: "Rachel", text: "Amy?? AMY what are you doing in NEW YORK?" },
+          { speaker: "Monica", text: "Who's Amy?" },
+          { speaker: "Rachel", text: "(to Monica) That's my sister Amy." },
+          { speaker: "Monica", text: "The MEAN one?" },
+          { speaker: "Rachel", text: "There is no NICE one, Monica! There's just DEGREES of mean!", duration_ms: 5000 },
+          { speaker: "Rachel", text: "Amy! Hi! What are you doing here for Thanksgiving?" },
+          { speaker: "Rachel", text: "Why don't I get you a drink. Let me get you a LARGE drink." },
+        ],
+      },
+      {
+        id: "guardianship-fight",
+        title: "Ross & Rachel fight about Emma's guardianship",
+        characters: ["Ross", "Rachel"],
+        detail: "You're (Ross & Rachel) finding out the other one wrote the will assuming THEIR parents would take Emma. You're now fighting about whose parents are worse. In front of everyone.",
+        dialogue: [
+          { speaker: "Ross", text: "Wait — wait wait WAIT. YOUR parents?" },
+          { speaker: "Rachel", text: "YES my parents Ross — they are her GRANDPARENTS!" },
+          { speaker: "Ross", text: "Your parents are NOT raising my daughter, Rachel." },
+          { speaker: "Rachel", text: "They raised ME!" },
+          { speaker: "Ross", text: "I REST MY CASE.", duration_ms: 4500 },
+          { speaker: "Rachel", text: "(gasp) EXCUSE me??" },
+          { speaker: "Ross", text: "Your dad still makes you CRY on the phone! Once a MONTH!" },
+          { speaker: "Rachel", text: "My dad is a CARDIOLOGIST! My dad SAVES PEOPLE!" },
+          { speaker: "Ross", text: "My parents have a STABLE marriage." },
+          { speaker: "Rachel", text: "Your parents barely tolerate each other and your father makes everyone watch SLIDESHOWS.", duration_ms: 5500 },
+        ],
+      },
+      {
+        id: "amy-plate",
+        title: "Amy breaks the Geller family plate",
+        characters: ["Monica"],
+        detail: "Your sister-in-law's sister just dropped your great-grandmother's plate. The one you brought out for the first time. The one in the GLASS CASE. You are about to detonate.",
+        dialogue: [
+          { speaker: "Monica", text: "The plate. THE PLATE.", duration_ms: 4000 },
+          { speaker: "Monica", text: "That is the GELLER plate. That belonged to my GRANDMOTHER." },
+          { speaker: "Monica", text: "My great-grandmother brought that plate to ELLIS ISLAND.", duration_ms: 5000 },
+          { speaker: "off", text: "(Amy) I — I am SO sorry, I didn't know it was important —" },
+          { speaker: "Monica", text: "It was behind GLASS, Amy. Behind. GLASS. How did you even GET it??" },
+          { speaker: "Monica", text: "I — I am going to need a minute. Everyone OUT. Out out out." },
+          { speaker: "Monica", text: "(alone, picking up shards) Oh my god. Oh my GOD.", duration_ms: 5000 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "last-one",
+    season: 10,
+    number: 17,
+    title: "The Last One",
+    blurb: "Rachel gets off the plane. Chandler and Monica bring twins home. Joey gives the keys to the apartment back.",
+    scenes: [
+      {
+        id: "ross-airport",
+        title: "Ross races to the airport",
+        characters: ["Ross", "Phoebe"],
+        detail: "Rachel just got on a plane to Paris. You (Ross) are racing to JFK to tell her you love her. Phoebe is driving and you keep telling her to go faster.",
+        iconic_line: "Drive faster Phoebe!",
+        dialogue: [
+          { speaker: "Ross", text: "PHOEBE. GO FASTER.", duration_ms: 3500 },
+          { speaker: "Phoebe", text: "I'm at the LIMIT, Ross!" },
+          { speaker: "Ross", text: "She's getting on a PLANE, Phoebe. A PLANE. To PARIS!" },
+          { speaker: "Phoebe", text: "Have you ever loved someone enough to break the law for them, Ross?" },
+          { speaker: "Ross", text: "YES! YES! PHOEBE GO FASTER!", duration_ms: 4000 },
+          { speaker: "Ross", text: "We are gonna MAKE IT — wait — (looks at GPS) — fourteen MINUTES??" },
+          { speaker: "Phoebe", text: "Sit back, hold on, and ENJOY THE RIDE." },
+          { speaker: "Ross", text: "AHHHHHHHHHH.", duration_ms: 4000 },
+        ],
+      },
+      {
+        id: "she-got-off",
+        title: "Did she get off the plane?",
+        characters: ["Ross", "Rachel"],
+        detail: "You (Ross) are home. Your voicemail just played Rachel's voice and cut off. You don't know if she got off the plane. You turn around — she's there. 'I got off the plane.'",
+        iconic_line: "I got off the plane.",
+        dialogue: [
+          { speaker: "off", text: "(voicemail) Ross — I — I'm at the airport — I'm trying to —" },
+          { speaker: "off", text: "(voicemail cuts out)" },
+          { speaker: "Ross", text: "She didn't get off. She didn't get off the plane. Oh god.", duration_ms: 5500 },
+          { speaker: "off", text: "(door opens behind him)" },
+          { speaker: "Rachel", text: "I got off the plane.", duration_ms: 5000 },
+          { speaker: "Ross", text: "You got off the plane.", duration_ms: 4000 },
+          { speaker: "Rachel", text: "I got off the plane.", duration_ms: 5000 },
+          { speaker: "Ross", text: "(speechless)", duration_ms: 5000 },
+        ],
+      },
+      {
+        id: "keys-on-the-counter",
+        title: "Everyone puts their keys on the counter",
+        characters: ["Monica", "Chandler", "Joey", "Ross", "Rachel", "Phoebe"],
+        detail: "The apartment is empty. Boxes everywhere. One by one you all set your keys on the counter and leave. You're (whoever the user picked) feeling the weight of it ending. You suggest coffee one last time.",
+        iconic_line: "Should we get some coffee?",
+        dialogue: [
+          { speaker: "Monica", text: "This is it. This is the place we all — okay I can't.", duration_ms: 4500 },
+          { speaker: "Chandler", text: "Just — put 'em down. We can do this." },
+          { speaker: "Joey", text: "Are you guys okay? Like — am I gonna SEE you guys?" },
+          { speaker: "Rachel", text: "Of COURSE you'll see us, Joey." },
+          { speaker: "Phoebe", text: "This is the end of an era. Officially.", duration_ms: 4500 },
+          { speaker: "Ross", text: "(placing keys) Yeah. Yeah it is.", duration_ms: 4000 },
+          { speaker: "Monica", text: "There they are. Six sets of keys.", duration_ms: 5000 },
+          { speaker: "Chandler", text: "Should we get some coffee?", duration_ms: 4500 },
+          { speaker: "Joey", text: "Yeah. Sure. Where?", duration_ms: 4500 },
+          { speaker: "off", text: "(silence)", duration_ms: 5000 },
+        ],
+      },
+    ],
+  },
+  {
+    id: "the-birth",
+    season: 1,
+    number: 23,
+    title: "The One With the Birth",
+    blurb: "Ben is born. Susan, Carol, and Ross fight through the entire labor.",
+    scenes: [
+      {
+        id: "the-closet",
+        title: "Susan, Carol, and Ross fight in the closet",
+        characters: ["Ross"],
+        detail: "Carol's in labor. You (Ross) and Susan are arguing about who gets to be in the room. Carol locked herself in a closet. You're banging on the door.",
+        dialogue: [
+          { speaker: "Ross", text: "Carol. CAROL. Open the door." },
+          { speaker: "off", text: "(Carol, muffled) NOOOOO." },
+          { speaker: "Ross", text: "Susan and I will leave the room for the delivery — just OPEN the door!" },
+          { speaker: "off", text: "(Susan) Why should YOU be in the room??" },
+          { speaker: "Ross", text: "Because I am the BIOLOGICAL FATHER, Susan!", duration_ms: 5000 },
+          { speaker: "off", text: "(Susan) I am the OTHER MOTHER." },
+          { speaker: "off", text: "(Carol) YOU TWO ARE NOT BEING HELPFUL." },
+          { speaker: "Ross", text: "We are RIGHT OUTSIDE, Carol. We are SO close." },
+          { speaker: "off", text: "(Carol) THEN WHY AM I IN A CLOSET, ROSS?", duration_ms: 5000 },
+        ],
+      },
+      {
+        id: "phoebe-monica-baby",
+        title: "Phoebe & Monica talk about having kids",
+        characters: ["Phoebe", "Monica"],
+        detail: "While Carol's in labor down the hall, you (Phoebe) and Monica are talking about wanting kids. Monica is anxious about timelines. You're being weirdly comforting.",
+        dialogue: [
+          { speaker: "Monica", text: "I just — I see Carol in there having a baby and I'm — wow." },
+          { speaker: "Phoebe", text: "You want a baby." },
+          { speaker: "Monica", text: "Maybe? Eventually? I don't know." },
+          { speaker: "Phoebe", text: "Mon. Mon. I'll have your baby for you." },
+          { speaker: "Monica", text: "...what?" },
+          { speaker: "Phoebe", text: "I'll be the surrogate. If you can't. I love you.", duration_ms: 5000 },
+          { speaker: "Monica", text: "Phoebe — that's — I don't even — thank you." },
+          { speaker: "Phoebe", text: "You'll be a great mom. The kind of organized mom that — wait, that's a great mom.", duration_ms: 5500 },
+        ],
+      },
+      {
+        id: "ben-arrives",
+        title: "Ben is born",
+        characters: ["Ross"],
+        detail: "Ben just arrived. You (Ross) are holding him for the first time. Carol and Susan are crying. You are crying. The world just got bigger.",
+        dialogue: [
+          { speaker: "Ross", text: "(holding Ben) Hi. Hey.", duration_ms: 4500 },
+          { speaker: "Ross", text: "It's — it's me. I'm — I'm your dad. Hi." },
+          { speaker: "Ross", text: "He's perfect. He's PERFECT." },
+          { speaker: "Ross", text: "(to Ben) Look. Look at all these people. They're all here for YOU." },
+          { speaker: "Ross", text: "I'm — I'm gonna be a really good dad. I'm gonna —", duration_ms: 5000 },
+          { speaker: "Ross", text: "Okay I'm crying.", duration_ms: 4500 },
+        ],
+      },
+    ],
+  },
+];
+
+export function getEpisode(id: string): Episode | undefined {
+  return EPISODES.find((e) => e.id === id);
+}
+
+export function getScene(episodeId: string, sceneId: string): {
+  episode: Episode;
+  scene: Scene;
+} | null {
+  const ep = getEpisode(episodeId);
+  if (!ep) return null;
+  const sc = ep.scenes.find((s) => s.id === sceneId);
+  if (!sc) return null;
+  return { episode: ep, scene: sc };
+}

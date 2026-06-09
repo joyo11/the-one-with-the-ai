@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CHARACTERS, type Character } from "@/lib/characters";
 import {
   streamChat,
@@ -11,6 +12,10 @@ import {
 } from "@/lib/api";
 import { CharacterMarker } from "@/components/character-marker";
 import { CouchIcon } from "@/components/svgs";
+import { getScene } from "@/lib/episodes";
+import { ChatBackground } from "@/components/chat-background";
+import { CHARACTER_LOCATION, LOCATIONS } from "@/lib/locations";
+import { SceneHero } from "@/components/scene-hero";
 
 interface Props {
   character: Character;
@@ -175,22 +180,32 @@ function Bubble({
   m,
   character,
   index,
+  isLastAssistant,
+  streaming,
+  userBubbleStyle,
 }: {
   m: ChatMessage & { failed?: boolean };
   character: Character;
   index: number;
+  isLastAssistant?: boolean;
+  streaming?: boolean;
+  userBubbleStyle?: { background: string; border: string; text: string };
 }) {
-  const delay = `${index * 0.08}s`;
+  // Animate in only on first mount of new bubbles — once committed don't
+  // re-animate on every content update.
+  const animate = index >= 0;
+  const delay = `${Math.min(index, 6) * 0.06}s`;
   if (m.role === "assistant") {
+    const empty = !m.content;
     return (
       <div
-        className="flex gap-2 sm:gap-3 items-end animate-msg-in"
+        className={animate ? "flex gap-2 sm:gap-3 items-end animate-msg-in" : "flex gap-2 sm:gap-3 items-end"}
         style={{ animationDelay: delay }}
       >
         <CharacterMarker character={character} size={36} className="sm:!w-10 sm:!h-10" />
         <div className="max-w-[78%] sm:max-w-[460px]">
           <div
-            className="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6]"
+            className="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6] min-h-[44px] flex items-center"
             style={{
               borderLeft: `3px solid ${character.stroke}`,
               borderTop: "1px solid var(--border)",
@@ -198,7 +213,15 @@ function Bubble({
               borderBottom: "1px solid var(--border)",
             }}
           >
-            {m.content || "…"}
+            {empty && isLastAssistant && streaming ? (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent" style={{ animationDelay: "0s" }} />
+                <span className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent" style={{ animationDelay: "0.2s" }} />
+                <span className="animate-type-dot inline-block w-2 h-2 rounded-full bg-accent" style={{ animationDelay: "0.4s" }} />
+              </span>
+            ) : (
+              <span className="whitespace-pre-wrap">{m.content}</span>
+            )}
           </div>
         </div>
       </div>
@@ -211,10 +234,22 @@ function Bubble({
     >
       <div className="max-w-[78%] sm:max-w-[460px]">
         <div
-          className="rounded-2xl rounded-br-md px-4 py-3 bg-surface text-fg font-sans text-[15px] leading-[1.6]"
-          style={{
-            border: `1px solid ${m.failed ? "var(--error)" : "var(--border)"}`,
-          }}
+          className="rounded-2xl rounded-br-md px-4 py-3 font-sans text-[15px] leading-[1.6] backdrop-blur-sm"
+          style={
+            userBubbleStyle
+              ? {
+                  background: m.failed
+                    ? "rgba(220, 38, 38, 0.18)"
+                    : userBubbleStyle.background,
+                  border: `1px solid ${m.failed ? "var(--error)" : userBubbleStyle.border}`,
+                  color: userBubbleStyle.text,
+                }
+              : {
+                  background: "var(--surface)",
+                  border: `1px solid ${m.failed ? "var(--error)" : "var(--border)"}`,
+                  color: "var(--fg)",
+                }
+          }
         >
           {m.content}
         </div>
@@ -248,13 +283,14 @@ function TypingBubble({ character }: { character: Character }) {
 
 function EmptyState({ character }: { character: Character }) {
   return (
-    <div className="h-full flex flex-col items-center justify-center text-center px-4">
-      <CouchIcon style={{ width: 54, color: "var(--accent)" }} />
-      <p className="font-marker text-fg text-[24px] sm:text-[30px] mt-5 leading-tight">
-        the couch is empty —<br />
-        sit down.
+    <div className="min-h-[60vh] flex-1 flex flex-col items-center justify-center text-center px-4 py-6 gap-6">
+      <p
+        className="font-[family-name:var(--font-marker)] text-white text-[28px] sm:text-[36px] leading-tight max-w-md"
+        style={{ textShadow: "2px 2px 0 rgba(0,0,0,.45)" }}
+      >
+        {character.entry}
       </p>
-      <div className="mt-6 sm:mt-8 flex gap-3 items-end max-w-[480px]">
+      <div className="flex gap-3 items-end max-w-[460px]">
         <CharacterMarker character={character} size={40} />
         <div
           className="rounded-2xl rounded-bl-md px-4 py-3 bg-surface text-fg font-sans text-[14px] sm:text-[15px] leading-[1.6] text-left"
@@ -278,15 +314,131 @@ export function ChatShell({ character }: Props) {
   >([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  // Typewriter buffer — full incoming text accumulates here; streamingText
+  // catches up frame-by-frame so the reveal feels paced even when SSE deltas
+  // arrive in bursts. displayedRef mirrors streamingText for outside-React
+  // reads (used by the drain loop after the stream ends).
+  const bufferRef = useRef<string>("");
+  const displayedRef = useRef<string>("");
+  const rafRef = useRef<number | null>(null);
+
+  // If we came from /watch/<ep>/<scene>, ground the chat in that moment.
+  const search = useSearchParams();
+  const sceneRef = useMemo(() => {
+    const ep = search?.get("ep");
+    const sc = search?.get("scene");
+    if (!ep || !sc) return null;
+    return getScene(ep, sc);
+  }, [search]);
+  const sceneContext = sceneRef?.scene.detail ?? "";
+
+  // Each character lives somewhere — apt 20, apt 19, ross's, central perk.
+  const locationId = CHARACTER_LOCATION[character.name] ?? "monicas";
+  const location = LOCATIONS[locationId];
+
+  // Reveal characters at ~80 chars/sec — fast enough to never feel sluggish,
+  // slow enough to read along. Writes directly into the last assistant bubble
+  // in history so the same DOM node updates throughout (no unmount = no flicker).
+  const startTypewriter = useCallback(() => {
+    if (rafRef.current !== null) return;
+    let lastTime = performance.now();
+    const tick = (now: number) => {
+      const dt = now - lastTime;
+      lastTime = now;
+      const target = bufferRef.current;
+      const cur = displayedRef.current;
+      if (cur !== target) {
+        const lag = target.length - cur.length;
+        const baseCps = 80;
+        const cps = lag > 80 ? Math.min(400, baseCps + lag * 2) : baseCps;
+        const step = Math.max(1, Math.round((cps * dt) / 1000));
+        const next = target.slice(0, cur.length + step);
+        displayedRef.current = next;
+        setHistory((h) => {
+          if (h.length === 0) return h;
+          const last = h[h.length - 1];
+          if (last.role !== "assistant") return h;
+          if (last.content === next) return h;
+          const copy = h.slice();
+          copy[copy.length - 1] = { ...last, content: next };
+          return copy;
+        });
+      }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, []);
+
+  const stopTypewriter = useCallback(() => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => stopTypewriter, [stopTypewriter]);
+
+  // Load any unread proactive messages from this character and surface them
+  // at the top of the thread — the in-app "inbox" for texts the gang sent
+  // while the user was away. Marks them read on display.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { supabaseBrowser } = await import("@/lib/supabase/client");
+        const supabase = supabaseBrowser();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || cancelled) return;
+        const { data: pending } = await supabase
+          .from("scheduled_touches")
+          .select("id, message, sent_at")
+          .eq("user_id", user.id)
+          .eq("character", character.name)
+          .is("read_at", null)
+          .not("sent_at", "is", null)
+          .not("message", "is", null)
+          .order("sent_at", { ascending: true })
+          .limit(5);
+        if (!pending || pending.length === 0 || cancelled) return;
+        setHistory((h) => [
+          ...pending.map((p) => ({
+            role: "assistant" as const,
+            content: p.message as string,
+          })),
+          ...h,
+        ]);
+        await supabase
+          .from("scheduled_touches")
+          .update({ read_at: new Date().toISOString() })
+          .in("id", pending.map((p) => p.id));
+      } catch {
+        /* swallow — inbox load failures shouldn't block normal chat */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [character.name]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [history, streaming]);
+  }, [history, streaming, streamingText]);
+
+  // Auto-grow the textarea up to a max of ~6 lines, then scroll inside.
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+  }, [input]);
 
   // Lock body scroll when drawer is open on mobile
   useEffect(() => {
@@ -304,19 +456,32 @@ export function ChatShell({ character }: Props) {
     setInput("");
     const newUser: ChatMessage = { role: "user", content: text };
     const next = [...history, newUser];
-    setHistory(next);
+    // Append the user message AND an empty assistant placeholder up front.
+    // The typewriter writes into the placeholder as deltas arrive; while the
+    // placeholder's content is empty, the Bubble renders three typing dots
+    // inside it. The bubble never unmounts → no flicker, dots always visible
+    // during the waiting moment.
+    setHistory([...next, { role: "assistant", content: "" }]);
     setStreaming(true);
-    setHistory((h) => [...h, { role: "assistant", content: "" }]);
-    let buf = "";
+    bufferRef.current = "";
+    displayedRef.current = "";
+    startTypewriter();
     try {
-      for await (const chunk of streamChat(character.name, next)) {
+      for await (const chunk of streamChat(character.name, next, {
+        sceneContext: sceneContext || undefined,
+      })) {
         if (chunk.error) {
           setToast(chunk.error);
+          stopTypewriter();
+          bufferRef.current = "";
+          displayedRef.current = "";
           setHistory((h) => {
             const copy = h.slice();
+            // Drop the empty assistant placeholder.
             if (copy.length && copy[copy.length - 1].role === "assistant" && !copy[copy.length - 1].content) {
               copy.pop();
             }
+            // Mark the user message as failed.
             for (let i = copy.length - 1; i >= 0; i--) {
               if (copy[i].role === "user") {
                 copy[i] = { ...copy[i], failed: true };
@@ -329,26 +494,44 @@ export function ChatShell({ character }: Props) {
           return;
         }
         if (chunk.delta) {
-          buf += chunk.delta;
-          setHistory((h) => {
-            const copy = h.slice();
-            const last = copy[copy.length - 1];
-            if (last && last.role === "assistant") {
-              copy[copy.length - 1] = { ...last, content: buf };
-            }
-            return copy;
-          });
+          bufferRef.current += chunk.delta;
         }
         if (chunk.done) break;
       }
-    } catch (e) {
-      setToast(
-        `Can't reach the chat server. Make sure it's running on port 8000.`,
-      );
+      // Drain — wait for the typewriter to reveal everything.
+      const final = bufferRef.current;
+      while (final !== "" && displayedRef.current !== final) {
+        await new Promise((r) => requestAnimationFrame(() => r(undefined)));
+      }
+      // Final flush — make sure the bubble has the exact final text.
+      setHistory((h) => {
+        if (h.length === 0) return h;
+        const last = h[h.length - 1];
+        if (last.role !== "assistant") return h;
+        if (last.content === final) return h;
+        const copy = h.slice();
+        copy[copy.length - 1] = { ...last, content: final };
+        return copy;
+      });
+      stopTypewriter();
+      displayedRef.current = "";
+      bufferRef.current = "";
+    } catch {
+      setToast("The gang is napping for a sec — try again in a moment.");
+      stopTypewriter();
+      bufferRef.current = "";
+      displayedRef.current = "";
+      // Drop the empty placeholder if the stream never reached us.
+      setHistory((h) => {
+        if (h.length && h[h.length - 1].role === "assistant" && !h[h.length - 1].content) {
+          return h.slice(0, -1);
+        }
+        return h;
+      });
     } finally {
       setStreaming(false);
     }
-  }, [input, history, streaming, character.name]);
+  }, [input, history, streaming, character.name, sceneContext, startTypewriter, stopTypewriter]);
 
   return (
     <div className="h-[100dvh] flex bg-bg" style={{ overflow: "hidden" }}>
@@ -372,9 +555,10 @@ export function ChatShell({ character }: Props) {
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
+        {/* Header — right padding leaves room for the fixed AuthWidget
+            (small avatar on mobile, full pill on desktop) */}
         <header
-          className="shrink-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-4 bg-surface relative"
+          className="shrink-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-7 py-3 sm:py-4 bg-surface relative pr-[64px] sm:pr-[180px] lg:pr-[200px]"
           style={{ borderBottom: "1px solid var(--border)" }}
         >
           <button
@@ -393,18 +577,22 @@ export function ChatShell({ character }: Props) {
           </Link>
           <CharacterMarker character={character} size={40} className="sm:!w-11 sm:!h-11" />
           <div className="flex-1 min-w-0">
-            <p className="font-sans font-bold text-[15px] sm:text-[16px] text-fg leading-tight">
+            <p className="font-sans font-bold text-[15px] sm:text-[16px] text-fg leading-tight truncate">
               {character.name}
             </p>
-            <p className="font-sans text-[11px] sm:text-[12px] text-muted flex items-center gap-1.5">
-              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: "var(--success)" }} />
-              <span className="hidden sm:inline">grounded · in character</span>
-              <span className="sm:hidden">in character</span>
+            <p className="font-sans text-[11px] sm:text-[12px] text-muted flex items-center gap-1.5 truncate">
+              <span className="hidden sm:inline-block w-1.5 h-1.5 rounded-full shrink-0" style={{ background: location.accent }} />
+              <span className="hidden sm:inline whitespace-nowrap">at {location.name} · {location.subtitle}</span>
+              <span className="sm:hidden whitespace-nowrap">{location.name}</span>
             </p>
           </div>
           <WhereToWatch character={character} />
         </header>
 
+        {/* The slim banner used to live here; when arriving from /watch we
+            now render a full cinematic hero at the top of the scroll area
+            (see below) instead, so the visit feels different from a regular
+            chat opening. */}
         {toast && (
           <div className="px-4 sm:px-7 pt-3">
             <div
@@ -417,7 +605,9 @@ export function ChatShell({ character }: Props) {
               <span className="text-error mt-0.5">✕</span>
               <div className="flex-1">
                 <p className="font-sans font-semibold text-[14px] text-fg">
-                  Whoa, slow down there, Joey.
+                  {toast?.toLowerCase().includes("overloaded") || toast?.toLowerCase().includes("backend")
+                    ? "The gang is napping for a sec"
+                    : "Whoa, slow down there, Joey."}
                 </p>
                 <p className="font-sans text-[13px] text-muted leading-snug mt-0.5">
                   {toast}
@@ -434,20 +624,47 @@ export function ChatShell({ character }: Props) {
           </div>
         )}
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto grain relative bg-bg">
-          <div className="h-full px-4 sm:px-8 py-5 sm:py-7 space-y-4 sm:space-y-5">
-            {history.length === 0 ? (
-              <EmptyState character={character} />
-            ) : (
-              history.map((m, i) => (
-                <Bubble key={i} m={m} character={character} index={i} />
-              ))
+        {/* Backdrop lives OUTSIDE the scroll container so it stays put as
+            the conversation grows. The scroll container is transparent on
+            top of it. */}
+        <div className="flex-1 relative overflow-hidden">
+          <ChatBackground
+            locationId={locationId}
+            overrideImage={character.portrait}
+            overrideImagePosition={character.portraitPosition}
+            overrideImageSize={character.portraitSize}
+          />
+          <div ref={scrollRef} className="absolute inset-0 overflow-y-auto">
+            {sceneRef && (
+              <div className="relative z-10">
+                <SceneHero
+                  episode={sceneRef.episode}
+                  scene={sceneRef.scene}
+                  locationId={locationId}
+                />
+              </div>
             )}
-            {streaming &&
-              history[history.length - 1]?.role === "assistant" &&
-              !history[history.length - 1]?.content && (
-                <TypingBubble character={character} />
+            <div className={`relative z-10 min-h-full flex flex-col px-4 sm:px-8 ${sceneRef ? "pt-5" : "pt-5 sm:pt-7"} pb-8 sm:pb-12 ${history.length === 0 ? "" : "space-y-4 sm:space-y-5"}`}>
+              {history.length === 0 && !sceneRef ? (
+                <EmptyState character={character} />
+              ) : history.length === 0 && sceneRef ? null : (
+                history.map((m, i) => {
+                  const isLastAssistant =
+                    m.role === "assistant" && i === history.length - 1;
+                  return (
+                    <Bubble
+                      key={i}
+                      m={m}
+                      character={character}
+                      index={i}
+                      isLastAssistant={isLastAssistant}
+                      streaming={streaming}
+                      userBubbleStyle={location.userBubble}
+                    />
+                  );
+                })
               )}
+            </div>
           </div>
         </div>
 
@@ -464,15 +681,23 @@ export function ChatShell({ character }: Props) {
               e.preventDefault();
               send();
             }}
-            className="flex items-center gap-2 rounded-full bg-bg px-2 py-2"
+            className="flex items-end gap-2 rounded-3xl bg-bg px-2 py-2"
             style={{ border: "1px solid var(--border)" }}
           >
-            <input
-              type="text"
+            <textarea
+              ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                // Enter = send. Shift+Enter (or ⌘/Ctrl+Enter) inserts a newline.
+                if (e.key === "Enter" && !e.shiftKey && !e.metaKey && !e.ctrlKey) {
+                  e.preventDefault();
+                  send();
+                }
+              }}
               placeholder={`Say something to ${character.name}…`}
-              className="flex-1 bg-transparent outline-none px-3 font-sans text-[15px] text-fg placeholder:text-muted"
+              rows={1}
+              className="flex-1 bg-transparent outline-none px-3 py-2 font-sans text-[15px] text-fg placeholder:text-muted resize-none overflow-y-auto leading-[1.4] max-h-[160px]"
               disabled={streaming}
             />
             <button

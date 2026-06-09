@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { DM_Mono, DM_Sans, Permanent_Marker } from "next/font/google";
 import { SvgDefs } from "@/components/svgs";
+import { AuthWidget } from "@/components/auth-widget";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
@@ -35,7 +37,10 @@ export const metadata: Metadata = {
     title: "Friends AI",
   },
   icons: {
-    icon: "/icons/icon-192.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/icons/icon-180.png",
   },
 };
@@ -71,6 +76,8 @@ export default function RootLayout({
           disableTransitionOnChange={false}
         >
           <SvgDefs />
+          <ServiceWorkerRegister />
+          <AuthWidget />
           {children}
         </ThemeProvider>
       </body>

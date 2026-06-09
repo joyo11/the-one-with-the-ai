@@ -1,0 +1,8 @@
+# Slim runtime — no torch / transformers (those were only needed for the
+# one-time precompute of game_lines.jsonl, which is already bundled).
+fastapi>=0.110
+uvicorn[standard]>=0.27
+anthropic>=0.40
+sentence-transformers>=3.0
+python-dotenv>=1.0
+numpy>=1.24

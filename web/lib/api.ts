@@ -1,8 +1,12 @@
 import type { CharacterName } from "./characters";
 
+// /chat now goes through our Next.js proxy (which injects user memory and
+// then forwards to the HF backend). /watch and /game/round are still public
+// and called directly against HF.
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "http://localhost:8000";
+const CHAT_URL = "/api/chat";
 
 export interface ChatMessage {
   role: "user" | "assistant";
@@ -26,21 +30,52 @@ export interface GameRound {
 /**
  * Stream a chat reply. Yields each text delta as it arrives.
  * Caller is responsible for accumulating + handling completion / errors.
+ *
+ * `sceneContext` lets the caller anchor the chat in a specific episode scene
+ * (see Pillar 5 / watch flow). It's appended to the character's system prompt
+ * server-side, so the model knows where in the show they are.
  */
 export async function* streamChat(
   character: CharacterName,
   messages: ChatMessage[],
-  signal?: AbortSignal,
+  options?: { signal?: AbortSignal; sceneContext?: string },
 ): AsyncGenerator<{ delta?: string; error?: string; done?: boolean }> {
-  const resp = await fetch(`${API_URL}/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ character, messages }),
-    signal,
-  });
+  // Client-side safety net: if the proxy doesn't even send response headers
+  // within 50s, abort so the caller's catch fires instead of spinning forever.
+  // Caller's own signal (if any) is composed in. The timer is cleared the moment
+  // headers arrive, so a normally-streaming reply is never cut short.
+  const ctrl = new AbortController();
+  const headerTimer = setTimeout(() => ctrl.abort(), 50000);
+  options?.signal?.addEventListener("abort", () => ctrl.abort(), { once: true });
+
+  let resp: Response;
+  try {
+    resp = await fetch(CHAT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        character,
+        messages,
+        scene_context: options?.sceneContext || null,
+      }),
+      signal: ctrl.signal,
+    });
+  } finally {
+    clearTimeout(headerTimer);
+  }
 
   if (!resp.ok || !resp.body) {
-    yield { error: `HTTP ${resp.status}` };
+    // Try to read a friendly error message from the proxy body before
+    // falling back to a raw HTTP code.
+    let msg = `HTTP ${resp.status}`;
+    try {
+      const text = await resp.text();
+      const parsed = text ? (JSON.parse(text) as { error?: string }) : null;
+      if (parsed?.error) msg = parsed.error;
+    } catch {
+      /* keep msg as the HTTP code */
+    }
+    yield { error: msg };
     return;
   }
 

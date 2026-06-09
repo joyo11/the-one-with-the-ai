@@ -46,15 +46,15 @@ export function LandingHero() {
               the one with the AI
             </span>
           </Link>
-          <nav className="ml-auto hidden md:flex items-center gap-5 lg:gap-7 font-sans font-semibold text-[13px] lg:text-[14px] text-white/85">
+          <nav className="ml-auto hidden md:flex items-center gap-5 lg:gap-7 font-sans font-semibold text-[13px] lg:text-[14px] text-white/85 mr-[170px] lg:mr-[180px]">
             <a href="#picker" className="hover:text-white transition-colors">Chat</a>
+            <Link href="/watch" className="hover:text-white transition-colors">Watch</Link>
+            <Link href="/lab" className="hover:text-white transition-colors">The Lab</Link>
             <Link href="/game" className="hover:text-white transition-colors">Guess Who</Link>
-            <a href="#picker" className="hover:text-white transition-colors">The Friends</a>
-            <a href="#about" className="hover:text-white transition-colors">About</a>
           </nav>
           <Link
             href="/game"
-            className="md:hidden ml-auto font-marker text-white bg-accent rounded-full px-3.5 py-1.5 text-[12px]"
+            className="md:hidden ml-auto font-marker text-white bg-accent rounded-full px-3.5 py-1.5 text-[12px] mr-[52px]"
           >
             Play
           </Link>
@@ -116,11 +116,6 @@ export function LandingHero() {
             >
               Play Guess Who
             </Link>
-          </div>
-          <div className="hidden lg:flex items-center gap-2.5 mt-9">
-            <span className="w-2.5 h-2.5 rounded-full bg-accent" />
-            <span className="w-2.5 h-2.5 rounded-full bg-white/35" />
-            <span className="w-2.5 h-2.5 rounded-full bg-white/35" />
           </div>
         </div>
 

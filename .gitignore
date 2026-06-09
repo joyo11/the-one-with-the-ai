@@ -39,6 +39,10 @@ classifier/data/
 classifier/models/
 chatbots/index/
 server/game_lines.jsonl
+# hf-space mirrors the regenerable index + game lines (and the .texts.json files
+# contain the dialogue we don't ship per the IP guardrail) — keep them out too.
+hf-space/index/
+hf-space/game_lines.jsonl
 
 # Eval intermediates (keep scorecard.csv as the published result)
 evals/data/
